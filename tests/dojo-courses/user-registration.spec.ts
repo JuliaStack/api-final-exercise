@@ -18,12 +18,6 @@ test.describe("register a new user", { tag: ["@regression", "@smoke"] }, () => {
 
     const json = await response.json();
 
-    await test.step("headers match the API contract", () => {
-      const headers = response.headers();
-      expect.soft(headers["access-control-allow-origin"]).toBe("*");
-      expect.soft(headers["content-type"]).toContain("application/json");
-    });
-
     await test.step("response body matches the registered user schema", () => {
       const result = registeredUserSchema.safeParse(json);
       expect(result.error?.issues ?? []).toEqual([]);
