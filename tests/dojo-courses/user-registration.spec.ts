@@ -1,5 +1,6 @@
 import { test, expect } from "../fixtures";
 import { buildUserData } from "../app/test-data/userData";
+import { registeredUserSchema } from "../app/json-schemas/user";
 
 test.describe("register a new user", { tag: ["@regression", "@smoke"] }, () => {
   test("API-001: register user - should return registered user", async ({
@@ -16,6 +17,17 @@ test.describe("register a new user", { tag: ["@regression", "@smoke"] }, () => {
     });
 
     const json = await response.json();
+
+    await test.step("headers match the API contract", () => {
+      const headers = response.headers();
+      expect.soft(headers["access-control-allow-origin"]).toBe("*");
+      expect.soft(headers["content-type"]).toContain("application/json");
+    });
+
+    await test.step("response body matches the registered user schema", () => {
+      const result = registeredUserSchema.safeParse(json);
+      expect(result.error?.issues ?? []).toEqual([]);
+    });
 
     await test.step("user email matches the request", () => {
       expect(json.email).toBe(user.email);
