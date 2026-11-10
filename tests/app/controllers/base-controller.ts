@@ -1,9 +1,5 @@
-import { APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
 
 export class BaseController {
-  request: APIRequestContext;
-
-  constructor(request: APIRequestContext) {
-    this.request = request;
-  }
+  constructor(protected readonly request: APIRequestContext) {}
 }

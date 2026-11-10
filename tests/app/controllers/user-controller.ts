@@ -1,4 +1,4 @@
-import { RegisterUserData } from "../types/user";
+import type { RegisterUserData } from "../types/user";
 import { BaseController } from "./base-controller";
 
 export class UserController extends BaseController {
