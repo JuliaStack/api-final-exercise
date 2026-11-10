@@ -1,16 +1,16 @@
 import { test, expect } from "../fixtures";
-import { buildUserData } from "../app/test-data/userData";
+import { buildUserData } from "../app/test-data/user-data";
 import { registeredUserSchema } from "../app/json-schemas/user";
+import { invalidRegistrationSet } from "../app/test-data/invalid-registration-data";
 
 test.describe("register a new user", { tag: ["@regression", "@smoke"] }, () => {
   test("API-001: register user - should return registered user", async ({
-    api,
+    userController,
   }) => {
-    const user = buildUserData();
+    const payload = buildUserData();
 
-    const response = await test.step("successful user registration", () => {
-      return api.post("api/auth/register", { data: user });
-    });
+    const response = await test.step("successful user registration", () =>
+      userController.registerUser(payload));
 
     await test.step("status code matches 201", () => {
       expect(response.status()).toBe(201);
@@ -24,11 +24,40 @@ test.describe("register a new user", { tag: ["@regression", "@smoke"] }, () => {
     });
 
     await test.step("user email matches the request", () => {
-      expect(json.email).toBe(user.email);
+      expect(json.email).toBe(payload.email);
     });
 
     await test.step("user name matches the request", () => {
-      expect(json.name).toBe(user.name);
+      expect(json.name).toBe(payload.name);
     });
   });
 });
+
+test.describe(
+  "register a new user with invalid data",
+  { tag: ["@regression"] },
+  () => {
+    for (const {
+      id,
+      title,
+      payload,
+      expectedError,
+    } of invalidRegistrationSet) {
+      test(`${id}: ${title} - should NOT be successful`, async ({
+        rawUserController,
+      }) => {
+        const response =
+          await test.step("user registration with invalid data", () =>
+            rawUserController.registerUser(payload));
+
+        await test.step("status code matches 400", () => {
+          expect(response.status()).toBe(400);
+        });
+
+        await test.step("error message matches expected", async () => {
+          expect((await response.json()).error).toBe(expectedError);
+        });
+      });
+    }
+  },
+);

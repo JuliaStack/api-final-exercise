@@ -1,4 +1,5 @@
 import { test as base, expect, APIRequestContext } from "@playwright/test";
+import { UserController } from "./app/controllers/user-controller";
 
 type Fixtures = {
   // Request context that throws on any non-2xx/3xx response.
@@ -6,6 +7,8 @@ type Fixtures = {
   // fixture for the request under test in negative scenarios.
   // baseURL and extraHTTPHeaders come from the current project's `use` config.
   api: APIRequestContext;
+  userController: UserController;
+  rawUserController: UserController;
 };
 
 export const test = base.extend<Fixtures>({
@@ -17,6 +20,14 @@ export const test = base.extend<Fixtures>({
     });
     await use(api);
     await api.dispose();
+  },
+
+  userController: async ({ api }, use) => {
+    await use(new UserController(api));
+  },
+
+  rawUserController: async ({ request }, use) => {
+    await use(new UserController(request));
   },
 });
 

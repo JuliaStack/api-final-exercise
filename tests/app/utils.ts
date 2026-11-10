@@ -1,3 +1,3 @@
 export function getRandomNumber() {
-  return Math.floor(Math.random() * 1_000);
+  return Math.floor(Math.random() * 1_000_000);
 }

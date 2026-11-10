@@ -1,6 +1,6 @@
 import { getRandomNumber } from "../utils";
 import { faker } from "@faker-js/faker";
-import type { RegisterUserData } from "../helpers";
+import type { RegisterUserData } from "../types/user";
 
 export function buildUserData(): RegisterUserData {
   return {
