@@ -8,3 +8,7 @@ export type UserFields = {
 };
 
 export type RegisterUserData = Pick<UserFields, "name" | "email" | "password">;
+
+export type TokenRequestData = Pick<UserFields, "email" | "password"> & {
+  grant_type: "password";
+};

@@ -1,5 +1,10 @@
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { UserController } from "./app/controllers/user-controller";
+import type { RegisterUserData } from "./app/types/user";
+import {
+  buildUserData,
+  buildTokenRequestData,
+} from "./app/test-data/user-data";
 
 type Fixtures = {
   // Request context that throws on any non-2xx/3xx response.
@@ -9,13 +14,14 @@ type Fixtures = {
   api: APIRequestContext;
   userController: UserController;
   rawUserController: UserController;
+  registeredUser: RegisterUserData;
+  accessToken: string;
 };
 
 export const test = base.extend<Fixtures>({
-  api: async ({ playwright, baseURL, extraHTTPHeaders }, use) => {
+  api: async ({ playwright, baseURL }, use) => {
     const api = await playwright.request.newContext({
       baseURL,
-      extraHTTPHeaders,
       failOnStatusCode: true,
     });
     await use(api);
@@ -28,6 +34,23 @@ export const test = base.extend<Fixtures>({
 
   rawUserController: async ({ request }, use) => {
     await use(new UserController(request));
+  },
+
+  registeredUser: async ({ userController }, use) => {
+    const user = buildUserData();
+    await base.step("precondition: register a new user", () =>
+      userController.registerUser(user),
+    );
+
+    await use(user);
+  },
+
+  accessToken: async ({ userController, registeredUser }, use) => {
+    const response = await base.step("precondition: get access token", () =>
+      userController.getToken(buildTokenRequestData(registeredUser)),
+    );
+    const { access_token: accessToken } = await response.json();
+    await use(accessToken);
   },
 });
 
