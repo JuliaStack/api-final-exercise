@@ -3,6 +3,7 @@ import "dotenv/config";
 
 export default defineConfig({
   testDir: "./tests",
+  globalSetup: "tests/dojo-courses/global-setup.ts",
   fullyParallel: false,
   retries: 0,
   use: {

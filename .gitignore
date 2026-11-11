@@ -4,7 +4,6 @@ node_modules/
 .env.local
 /tmp/
 
-node_modules/
 /test-results/
 /tests/coverage-report
 .local-browsers/
@@ -39,7 +38,6 @@ test-results
 /packages/playwright-test/README.md
 /packages/playwright-core/api.json
 /packages/playwright-cli
-.env
 /tests/installation/output/
 /tests/installation/.registry.json
 .cache/
@@ -49,3 +47,4 @@ playwright.env
 .playwright/
 # TypeScript incremental build cache
 *.tsbuildinfo
+/docs/
