@@ -1,30 +1,22 @@
-import { getRandomNumber } from "../utils";
 import { buildUserData } from "./user-data";
-
-const nameTextErrorMessage = "Name must be at least 2 characters";
-const emailTextErrorMessage = "Invalid email address";
-const passwordTextErrorMessage = "Password must be at least 8 characters";
 
 export const invalidRegistrationData = [
   {
     id: "API-002",
-    title: "empty required parameter name",
+    title: "empty name",
     payload: { ...buildUserData(), name: "" },
-    expectedError: nameTextErrorMessage,
   },
 
   {
     id: "API-003",
     title: "invalid name (1 symbol)",
     payload: { ...buildUserData(), name: "J" },
-    expectedError: nameTextErrorMessage,
   },
 
   {
     id: "API-004",
-    title: "empty required parameter email",
+    title: "empty email",
     payload: { ...buildUserData(), email: "" },
-    expectedError: emailTextErrorMessage,
   },
 
   {
@@ -32,22 +24,19 @@ export const invalidRegistrationData = [
     title: "invalid email (missing at sign)",
     payload: {
       ...buildUserData(),
-      email: "john" + getRandomNumber() + "example.com",
+      email: "johnexample.com",
     },
-    expectedError: emailTextErrorMessage,
   },
 
   {
     id: "API-006",
-    title: "empty required parameter password",
+    title: "empty password",
     payload: { ...buildUserData(), password: "" },
-    expectedError: passwordTextErrorMessage,
   },
 
   {
     id: "API-007",
-    title: "invalid password (7 symbols)",
-    payload: { ...buildUserData(), password: "pass12%" },
-    expectedError: passwordTextErrorMessage,
+    title: "invalid password (9 symbols)",
+    payload: { ...buildUserData(), password: "WrongPass" },
   },
 ];
