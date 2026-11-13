@@ -59,7 +59,7 @@ jobs:
       # під час виконання тестів без залежності від зовнішньої бази.
       - uses: shogo82148/actions-setup-mysql@v1
         with:
-          mysql-version: "9.6.0"
+          mysql-version: "8.4"
 
       # Швидка перевірка, що MySQL дійсно стартував і відповідає на запити перед продовженням.
       - run: mysql -uroot -e 'SELECT version()'
