@@ -1,4 +1,8 @@
-import type { TokenRequestData, RegisterUserData } from "../types/user";
+import type {
+  TokenRequestData,
+  RegisterUserData,
+  UpdateUserData,
+} from "../types/user";
 import { BaseController } from "./base-controller";
 
 export class UserController extends BaseController {
@@ -13,6 +17,13 @@ export class UserController extends BaseController {
   async getUserInfo(accessToken: string) {
     return this.request.get("api/oauth/userinfo", {
       headers: { authorization: `Bearer ${accessToken}` },
+    });
+  }
+
+  async updateUser(id: string, accessToken: string, data: UpdateUserData) {
+    return this.request.patch(`api/admin/users/${id}`, {
+      headers: { authorization: `Bearer ${accessToken}` },
+      data,
     });
   }
 }

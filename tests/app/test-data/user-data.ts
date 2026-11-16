@@ -1,6 +1,16 @@
 import { getRandomNumber } from "../utils";
 import { faker } from "@faker-js/faker";
-import type { RegisterUserData, TokenRequestData } from "../types/user";
+import type {
+  RegisterUserData,
+  TokenRequestData,
+  UserFields,
+} from "../types/user";
+
+// Pre-existing admin account; it shares its password with the default user.
+export const adminCredentials: Pick<UserFields, "email" | "password"> = {
+  email: process.env.ADMIN_EMAIL!,
+  password: process.env.DEFAULT_USER_PASSWORD!,
+};
 
 export function buildUserData(): RegisterUserData {
   return {
@@ -11,7 +21,7 @@ export function buildUserData(): RegisterUserData {
 }
 
 export function buildTokenRequestData(
-  user: RegisterUserData,
+  user: Pick<UserFields, "email" | "password">,
 ): TokenRequestData {
   return {
     grant_type: "password",

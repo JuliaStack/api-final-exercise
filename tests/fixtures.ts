@@ -1,7 +1,8 @@
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { UserController } from "./app/controllers/user-controller";
-import type { RegisterUserData } from "./app/types/user";
+import type { CreatedUser } from "./app/types/user";
 import {
+  adminCredentials,
   buildUserData,
   buildTokenRequestData,
 } from "./app/test-data/user-data";
@@ -14,8 +15,9 @@ type Fixtures = {
   api: APIRequestContext;
   userController: UserController;
   rawUserController: UserController;
-  registeredUser: RegisterUserData;
+  registeredUser: CreatedUser;
   accessToken: string;
+  adminToken: string;
 };
 
 export const test = base.extend<Fixtures>({
@@ -38,11 +40,12 @@ export const test = base.extend<Fixtures>({
 
   registeredUser: async ({ userController }, use) => {
     const user = buildUserData();
-    await base.step("precondition: register a new user", () =>
+    const response = await base.step("precondition: register a new user", () =>
       userController.registerUser(user),
     );
+    const { id } = await response.json();
 
-    await use(user);
+    await use({ ...user, id });
   },
 
   accessToken: async ({ userController, registeredUser }, use) => {
@@ -51,6 +54,15 @@ export const test = base.extend<Fixtures>({
     );
     const { access_token: accessToken } = await response.json();
     await use(accessToken);
+  },
+
+  adminToken: async ({ userController }, use) => {
+    const response = await base.step(
+      "precondition: get admin access token",
+      () => userController.getToken(buildTokenRequestData(adminCredentials)),
+    );
+    const { access_token: adminToken } = await response.json();
+    await use(adminToken);
   },
 });
 
