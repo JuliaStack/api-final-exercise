@@ -42,7 +42,7 @@ test.describe(
         rawUserController,
       }) => {
         const response =
-          await test.step("user registration with invalid data", () =>
+          await test.step(`user registration with ${title}`, () =>
             rawUserController.registerUser(payload));
 
         await test.step("status code matches 400", () => {

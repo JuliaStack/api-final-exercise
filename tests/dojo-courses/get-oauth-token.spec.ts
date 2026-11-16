@@ -29,7 +29,7 @@ test.describe("get token - negative scenarios", { tag: "@regression" }, () => {
       rawUserController,
       registeredUser,
     }) => {
-      const response = await test.step("request token with invalid data", () =>
+      const response = await test.step(`request token with ${title}`, () =>
         rawUserController.getToken({
           ...buildTokenRequestData(registeredUser),
           ...overrides,
