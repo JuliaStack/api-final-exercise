@@ -19,12 +19,6 @@ on:
         default: "http://localhost:3000/"
         type: string
 
-      workersCount:
-        description: "How many workers to use for testing"
-        required: true
-        default: 3
-        type: number
-
 # Мінімальні права: contents: read — для checkout репозиторію.
 permissions:
   contents: read
