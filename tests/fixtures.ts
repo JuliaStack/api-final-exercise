@@ -16,7 +16,7 @@ type Fixtures = {
   userController: UserController;
   rawUserController: UserController;
   registeredUser: CreatedUser;
-  accessToken: string;
+  userToken: string;
   adminToken: string;
 };
 
@@ -48,12 +48,13 @@ export const test = base.extend<Fixtures>({
     await use({ ...user, id });
   },
 
-  accessToken: async ({ userController, registeredUser }, use) => {
-    const response = await base.step("precondition: get access token", () =>
-      userController.getToken(buildTokenRequestData(registeredUser)),
+  userToken: async ({ userController, registeredUser }, use) => {
+    const response = await base.step(
+      "precondition: get user access token",
+      () => userController.getToken(buildTokenRequestData(registeredUser)),
     );
-    const { access_token: accessToken } = await response.json();
-    await use(accessToken);
+    const { access_token: userToken } = await response.json();
+    await use(userToken);
   },
 
   adminToken: async ({ userController }, use) => {

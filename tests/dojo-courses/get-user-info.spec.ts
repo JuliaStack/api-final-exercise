@@ -9,10 +9,10 @@ test.describe(
     test("API-010: registered user should receive info", async ({
       userController,
       registeredUser,
-      accessToken,
+      userToken,
     }) => {
       const response = await test.step("request user info", () =>
-        userController.getUserInfo(accessToken));
+        userController.getUserInfo(userToken));
 
       const json = await response.json();
 
