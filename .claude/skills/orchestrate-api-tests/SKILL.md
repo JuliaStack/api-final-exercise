@@ -173,7 +173,7 @@ Reply in the language the user writes in. Report after **every** stage, short, w
   - the edge cases noted by the stages (one line each, not implemented);
   - anything that was interrupted and resumed.
 
-  Remind the user that nothing was committed.
+  Remind the user that nothing was committed, and that `.md` files always go in a separate commit from everything else: CI ignores them (`paths-ignore: "**.md"` in `.github/workflows/playwright.yaml`), so they must not ride along with test changes.
 
 Never claim tests pass unless a stage reported that it ran them and they passed.
 

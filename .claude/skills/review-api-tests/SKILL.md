@@ -106,10 +106,8 @@ Verdict, one of:
 | Verdict                | When                       | Outcome                                    |
 | ---------------------- | -------------------------- | ------------------------------------------ |
 | `Ready to commit`      | no findings (or none that need a change) | chat reply only; **no file written** |
-| `Ready after nits`     | only Nit findings          | write the review file                      |
+| `Ready after nits`     | only Nit or Should-fix findings (the user may commit) | write the review file |
 | `Fix N blocker(s) first` | at least one Blocker (Should-fix items go in the same file) | write the review file |
-
-A "Should fix" with no Blocker also counts as `Ready after nits`: the user may commit, but the file lists what to improve.
 
 **The review file** (for any verdict except `Ready to commit`):
 
@@ -184,11 +182,10 @@ Reply in the language the user writes in (Ukrainian if they write Ukrainian). Ke
 - **Looks good**: one or two lines on what already follows the patterns, so the user knows it was checked.
 - If the verdict is `Ready to commit`: say so, and that no file was written.
 
-Then offer to apply the fixes from the file. Don't apply them, and don't commit, unless the user says so.
+Then offer to apply the fixes from the file. Don't apply them, and don't commit, unless the user says so. When committing, `.md` files always go in a separate commit from everything else: CI ignores them (`paths-ignore: "**.md"` in `.github/workflows/playwright.yaml`), so they must not ride along with test changes.
 
 ## Model
-
-This skill runs on **Sonnet with high effort**. When the `orchestrate-api-tests` skill runs it, the orchestrator passes `model: sonnet, effort: high` to the subagent.
+This skill runs on **Sonnet with high effort**; the `orchestrate-api-tests` orchestrator passes `model: sonnet, effort: high` to the subagent.
 
 ## Orchestrated mode
 
