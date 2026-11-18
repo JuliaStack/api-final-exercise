@@ -1,6 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { getRandomNumber } from "../utils";
-import type { CreateCategoryData, CreateCourseData } from "../types/course";
+import type {
+  CreateCategoryData,
+  CreateChapterData,
+  CreateCourseData,
+} from "../types/course";
 
 export function buildCourseData(
   overrides: Partial<CreateCourseData> = {},
@@ -10,6 +14,13 @@ export function buildCourseData(
     ...overrides,
   };
 }
+
+export function buildChapterData(): CreateChapterData {
+  return { title: `${faker.lorem.words(2)} ${getRandomNumber()}` };
+}
+
+// Well-formed id of a course that does not exist.
+export const nonExistingCourseId = "cnonexistingcourse0000000";
 
 export function buildCategoryData(): CreateCategoryData {
   return { name: `${faker.word.noun()} ${getRandomNumber()}` };

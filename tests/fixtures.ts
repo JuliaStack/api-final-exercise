@@ -3,13 +3,16 @@ import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
 import { UserController } from "./app/controllers/user-controller";
 import type {
+  CourseWithChapters,
   CreatedCategory,
+  CreatedChapter,
   CreatedCourse,
   CreateCourseData,
 } from "./app/types/course";
 import type { CreatedUser } from "./app/types/user";
 import {
   buildCategoryData,
+  buildChapterData,
   buildCourseData,
 } from "./app/test-data/course-data";
 import {
@@ -39,6 +42,8 @@ type Fixtures = {
     overrides?: Partial<CreateCourseData>,
   ) => Promise<CreatedCourse>;
   draftCourse: CreatedCourse;
+  // A draft course with one published and one draft chapter.
+  courseWithChapters: CourseWithChapters;
   createdCategory: CreatedCategory;
 };
 
@@ -126,6 +131,34 @@ export const test = base.extend<Fixtures>({
 
   draftCourse: async ({ createDraftCourse }, use) => {
     await use(await createDraftCourse());
+  },
+
+  courseWithChapters: async (
+    { courseController, adminToken, draftCourse },
+    use,
+  ) => {
+    const addChapter = async (): Promise<CreatedChapter> => {
+      const data = buildChapterData();
+      const response = await base.step(
+        "precondition: admin adds a chapter to the course",
+        () => courseController.createChapter(draftCourse.id, adminToken, data),
+      );
+      const { id } = await response.json();
+      return { id, title: data.title };
+    };
+
+    const publishedChapter = await addChapter();
+    const draftChapter = await addChapter();
+    await base.step("precondition: admin publishes the first chapter", () =>
+      courseController.updateChapter(
+        draftCourse.id,
+        publishedChapter.id,
+        adminToken,
+        { isPublished: true },
+      ),
+    );
+
+    await use({ course: draftCourse, publishedChapter, draftChapter });
   },
 
   createdCategory: async ({ categoryController, adminToken }, use) => {

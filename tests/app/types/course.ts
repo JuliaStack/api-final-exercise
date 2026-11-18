@@ -31,3 +31,22 @@ export type CategoryFields = {
 export type CreateCategoryData = Pick<CategoryFields, "name">;
 
 export type CreatedCategory = Pick<CategoryFields, "id" | "slug">;
+
+export type ChapterFields = {
+  id: string;
+  title: string;
+  isPublished: boolean;
+};
+
+export type CreateChapterData = Pick<ChapterFields, "title">;
+
+export type UpdateChapterData = Partial<Pick<ChapterFields, "isPublished">>;
+
+export type CreatedChapter = Pick<ChapterFields, "id" | "title">;
+
+// A draft course with one published and one draft chapter.
+export type CourseWithChapters = {
+  course: CreatedCourse;
+  publishedChapter: CreatedChapter;
+  draftChapter: CreatedChapter;
+};

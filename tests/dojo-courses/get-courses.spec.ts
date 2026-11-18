@@ -3,7 +3,7 @@ import {
   type CoursesPage,
 } from "../app/json-schemas/course";
 import { buildSearchToken } from "../app/test-data/course-data";
-import { hiddenDraftCallers } from "../app/test-data/hidden-draft-callers-data";
+import { nonAdminCourseListCallers } from "../app/test-data/non-admin-callers-data";
 import { expect, test } from "../fixtures";
 
 test.describe("get courses list", () => {
@@ -42,7 +42,7 @@ test.describe("get courses list", () => {
     },
   );
 
-  for (const { id, title, getToken } of hiddenDraftCallers) {
+  for (const { id, title, getToken } of nonAdminCourseListCallers) {
     test(
       `${id}: ${title} - should not see a draft course in the list`,
       { tag: "@regression" },
