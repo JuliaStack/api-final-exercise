@@ -2,14 +2,17 @@ name: api tests
 
 # Тригери воркфлоу:
 # 1. push у main — автоматичний запуск тестів після кожного пушу.
-#    Inputs тут порожні, тому BASE_URL і кількість воркерів беруться з fallback
-#    (локальний сервер із джобу і 3 воркери).
+#    Inputs тут порожні, тому BASE_URL береться з fallback (локальний сервер із джобу),
+#    а кількість воркерів — із playwright.config.ts.
+#    Якщо в пуші змінено лише .md файли, воркфлоу не запускається (paths-ignore):
+#    якщо серед змінених файлів є хоч один не .md, тести запускаються як зазвичай.
 # 2. workflow_dispatch — ручний запуск через GitHub UI або API.
-#    Дозволяє передати URL цільового API і кількість паралельних воркерів
-#    без зміни коду воркфлоу.
+#    Дозволяє передати URL цільового API без зміни коду воркфлоу.
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md"
 
   workflow_dispatch:
     inputs:
@@ -91,10 +94,9 @@ jobs:
       - name: Wait for server to be ready
         run: npx wait-on http://localhost:3000/ --timeout 30000
 
-      # Запускає Playwright-тести з кількістю паралельних воркерів, переданою через параметр.
-      # Більше воркерів — швидший запуск, але більше навантаження на локальний сервер і БД.
+      # Запускає Playwright-тести; кількість воркерів задана в playwright.config.ts (у CI — 2).
       - name: Run api tests
-        run: npx playwright test --workers=${{ github.event.inputs.workersCount || 3 }}
+        run: npx playwright test
 
       # Зберігає HTML-звіт Playwright як артефакт джобу навіть якщо тести впали (if: !cancelled()).
       # Зберігається 30 днів — достатньо для аналізу флапаючих тестів і розбору інцидентів.
