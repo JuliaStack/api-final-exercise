@@ -48,11 +48,15 @@ Key convention: two controllers exist on purpose.
 - `userController` uses the `api` context with `failOnStatusCode: true`, so it **throws on non-2xx**. Use it for Arrange steps and happy paths.
 - `rawUserController` uses Playwright's default `request`, which does not throw. Use it for the request under test in negative scenarios (4xx assertions).
 
-Other conventions seen throughout the specs: test titles are prefixed with an id (`API-010: ...`); everything is wrapped in `test.step(...)`; describes carry tags (`@regression`, `@smoke`); negative scenarios are a `for` loop over a case array from `test-data/`.
+Other conventions seen throughout the specs: test titles are prefixed with an id (`API-010: ...`); everything is wrapped in `test.step(...)`; describes carry tags (`@regression`, `@smoke`); negative scenarios are a `for` loop over a case array from `test-data/`; setup steps in specs are named `precondition: ...` (same as in the fixtures).
 
 `docs/` (gitignored, written in Ukrainian) holds the author's own notes on the intended order of writing a test (types → data → controller → schema → fixture → spec → negatives), fixture structure, and a pending refactor (`payload` → `buildPayload()`). Read `docs/test-writing-order.md` before adding a new test; note the docs may lag the code slightly (e.g. the negative-case array is now named `invalidRegistrationData`).
 
 When adding a test, open the corresponding route in `src/app/api/...` first to see what it accepts, returns, and which error statuses/messages it produces.
+
+## Test-writing skills (`.claude/skills/`)
+
+`plan-endpoint-tests` → `create-api-tests` → `review-api-tests`, chained by `orchestrate-api-tests` (runs each as a subagent and keeps resumable state). They hand work over through files in gitignored `docs/test-plans/`, `docs/test-reviews/` and `docs/test-pipeline/`. `create-api-tests` holds the test-writing rules; none of the skills commit.
 
 ## API architecture (`src/`)
 
@@ -65,4 +69,4 @@ When adding a test, open the corresponding route in `src/app/api/...` first to s
 
 ## CI
 
-`.github/workflows/playwright.yaml` (comments in Ukrainian) runs on push to `main` and manual dispatch (input `url`): spins up MySQL 8.4, `db:push` + `db:seed`, starts `npm run dev`, then runs Playwright. On push, `BASE_URL` falls back to `http://localhost:3000/`. Secrets/vars needed: `JWT_SECRET`, `DEFAULT_USER_PASSWORD`, `DATABASE_URL`, `UPLOAD_DIR`, `ADMIN_EMAIL`. The number of workers is not set in the workflow; it comes from `playwright.config.ts` (2 when `CI` is set).
+`.github/workflows/playwright.yaml` (comments in Ukrainian) runs on push to `main` and manual dispatch (input `url`): spins up MySQL 8.4, `db:push` + `db:seed`, starts `npm run dev`, then runs Playwright. On push, `BASE_URL` falls back to `http://localhost:3000/`. Secrets/vars needed: `JWT_SECRET`, `DEFAULT_USER_PASSWORD`, `DATABASE_URL`, `UPLOAD_DIR`, `ADMIN_EMAIL`. The number of workers is not set in the workflow; it comes from `playwright.config.ts` (2 when `CI` is set). Pushes that change only `.md` files don't trigger it (`paths-ignore: "**.md"`); manual dispatch always runs.
