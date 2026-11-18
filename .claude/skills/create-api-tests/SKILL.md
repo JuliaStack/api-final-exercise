@@ -60,7 +60,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
 
 | Layer          | File                                           | Pattern                                                                                                                                                                                                               |
 | -------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types          | `tests/app/types/<domain>.ts`                  | A base `XxxFields` type, derived types via `Pick` / `Partial` (like `RegisterUserData`, `UpdateUserData`).                                                                                                            |
+| Types          | `tests/app/types/<domain>.ts`                  | A base `XxxFields` type, derived types via `Pick` / `Partial` (like `RegisterUserData`, `TokenRequestData`).                                                                                                            |
 | Data           | `tests/app/test-data/<domain>-data.ts`         | A `buildXxxData()` builder using faker; unique fields via `getRandomNumber()`; secrets from `process.env`.                                                                                                            |
 | Negative cases | `tests/app/test-data/invalid-<flow>-data.ts`   | An array of `{ id, title, overrides \| buildPayload, status }`. For new cases use `overrides` on top of a builder or `buildPayload: () => ...`, **not** a ready-made `payload` computed at import time.               |
 | Controller     | `tests/app/controllers/<domain>-controller.ts` | `extends BaseController`; one method = one HTTP call, returns the `response`, **no assertions**. Paths have no leading `/` (`"api/courses"`). Pass the token as `headers: { authorization: \`Bearer ${token}\` }`.    |
@@ -86,7 +86,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
   ```
 - Use `xxxController` for Arrange steps and happy paths; use `rawXxxController` for the request under test in negative scenarios.
 - Negative scenarios are a `for` loop over an array from `test-data/`. A single case that needs its own precondition (like `API-008` existing user) is a standalone test in the same describe.
-- In negative tests, assert the status and the presence or content of the error field the route actually returns (`error`, `error_description`).
+- In negative tests, assert the status and the error field the route actually returns (`error`, `error_description`). If the text is meaningful (it says what went wrong, e.g. `Account is deactivated`, `No valid fields to update`), assert that text with `toContain(...)` (not `toBe`, to stay flexible about wording around it) so the test shows which error is expected. Only when the text is generic or uninformative, assert it is present (`toBeTruthy()`).
 - Tests are independent: each one creates its own data through fixtures and builders and doesn't rely on seed data, except `adminCredentials`.
 
 ### 4. Verify before handing over
