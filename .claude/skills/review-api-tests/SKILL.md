@@ -55,7 +55,7 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
 **Spec structure:**
 
 - `test` / `expect` imported **only** from `../fixtures`, never from `@playwright/test`.
-- Describes: `test.describe("<flow>", { tag: ["@regression", "@smoke"] }, ...)` for positive, `test.describe("<flow> - negative scenarios", { tag: "@regression" }, ...)` for negative.
+- Describes: `test.describe("<flow>", ...)` for positive, `test.describe("<flow> - negative scenarios", ...)` for negative; **no tags on describes**. Every `test(...)` has its own tag as the 2nd argument: `{ tag: "@regression" }`, plus `@smoke` only for the main happy path of a resource (`{ tag: ["@regression", "@smoke"] }`); negatives and secondary flows are `@regression` only.
 - Titles: `API-NNN: <subject> - should <expectation>`; in a loop `` `${id}: ${title} - should return ${status}` ``. Ids unique and following on from the current highest id.
 - Everything inside `test.step(...)`; order request → status (if relevant) → schema → values.
 - **Arrange → Act → Assert**:

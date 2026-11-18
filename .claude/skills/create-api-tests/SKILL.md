@@ -71,7 +71,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
 ### 3. Spec file structure
 
 - Import `test` and `expect` **only** from `../fixtures`.
-- `test.describe("<flow>", { tag: ["@regression", "@smoke"] }, ...)` for positive tests; `test.describe("<flow> - negative scenarios", { tag: "@regression" }, ...)` for negative ones.
+- `test.describe("<flow>", ...)` for positive tests and `test.describe("<flow> - negative scenarios", ...)` for negative ones, **without tags**. Tags go on each test, as the second argument: `test("API-NNN: ...", { tag: "@regression" }, async ({ ... }) => {...})`. Every test is `@regression`; only the main happy path of a resource also gets `@smoke` (`tag: ["@regression", "@smoke"]`). Negatives, business rules and secondary flows (e.g. admin-side) are `@regression` only. Keep smoke small: one test per resource.
 - Test title: `API-NNN: <subject> - should <expectation>`; in a loop: `` `${id}: ${title} - should return ${status}` ``.
 - Wrap everything in `test.step(...)`. Order: request → status (if relevant) → schema → values.
 - Follow **Arrange → Act → Assert**, in that order, with one Act per test:

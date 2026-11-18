@@ -48,7 +48,7 @@ Key convention: two controllers exist on purpose.
 - `userController` uses the `api` context with `failOnStatusCode: true`, so it **throws on non-2xx**. Use it for Arrange steps and happy paths.
 - `rawUserController` uses Playwright's default `request`, which does not throw. Use it for the request under test in negative scenarios (4xx assertions).
 
-Other conventions seen throughout the specs: test titles are prefixed with an id (`API-010: ...`); everything is wrapped in `test.step(...)`; describes carry tags (`@regression`, `@smoke`); negative scenarios are a `for` loop over a case array from `test-data/`; setup steps in specs are named `precondition: ...` (same as in the fixtures).
+Other conventions seen throughout the specs: test titles are prefixed with an id (`API-010: ...`); everything is wrapped in `test.step(...)`; tags are set on each test (`test(title, { tag: ... }, fn)`), not on describes: every test is `@regression`, and only the main happy path of a resource is also `@smoke`; negative scenarios are a `for` loop over a case array from `test-data/`; setup steps in specs are named `precondition: ...` (same as in the fixtures).
 
 `docs/` (gitignored, written in Ukrainian) holds the author's own notes on the intended order of writing a test (types → data → controller → schema → fixture → spec → negatives), fixture structure, and a pending refactor (`payload` → `buildPayload()`). Read `docs/test-writing-order.md` before adding a new test; note the docs may lag the code slightly (e.g. the negative-case array is now named `invalidRegistrationData`).
 
