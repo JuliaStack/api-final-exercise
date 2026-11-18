@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-const courseListItemSchema = z.strictObject({
+// Response body of POST /api/courses
+export const courseSchema = z.strictObject({
   id: z.cuid(),
   title: z.string().min(3),
   slug: z.string().min(1),
@@ -17,6 +18,9 @@ const courseListItemSchema = z.strictObject({
   authorRole: z.string().nullable(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+
+const courseListItemSchema = courseSchema.extend({
   categories: z.array(
     z.strictObject({
       id: z.cuid(),
@@ -41,4 +45,5 @@ export const coursesPageSchema = z.strictObject({
   }),
 });
 
+export type Course = z.infer<typeof courseSchema>;
 export type CoursesPage = z.infer<typeof coursesPageSchema>;

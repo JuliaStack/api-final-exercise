@@ -1,6 +1,7 @@
 export type CourseFields = {
   id: string;
   title: string;
+  slug: string;
   description: string;
   isPublished: boolean;
   categoryIds: string[];
@@ -12,7 +13,7 @@ export type UpdateCourseData = Partial<
   Pick<CourseFields, "description" | "isPublished" | "categoryIds">
 >;
 
-export type CreatedCourse = Pick<CourseFields, "id" | "title">;
+export type CreatedCourse = Pick<CourseFields, "id" | "title" | "slug">;
 
 export type CourseListQuery = {
   page?: number;

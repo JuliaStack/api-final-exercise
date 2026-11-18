@@ -15,9 +15,11 @@ export class CourseController extends BaseController {
     });
   }
 
-  async createCourse(accessToken: string, data: CreateCourseData) {
+  async createCourse(accessToken: string | undefined, data: CreateCourseData) {
     return this.request.post("api/courses", {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: accessToken
+        ? { authorization: `Bearer ${accessToken}` }
+        : undefined,
       data,
     });
   }

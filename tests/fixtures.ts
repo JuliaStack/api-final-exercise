@@ -30,7 +30,10 @@ type Fixtures = {
   userToken: string;
   adminToken: string;
   courseController: CourseController;
+  rawCourseController: CourseController;
   categoryController: CategoryController;
+  // Ids pushed here are deleted as admin in teardown, even if the test fails.
+  courseIdsToDelete: string[];
   // Creates a draft course as admin; every created course is deleted in teardown.
   createDraftCourse: (
     overrides?: Partial<CreateCourseData>,
@@ -89,25 +92,36 @@ export const test = base.extend<Fixtures>({
     await use(new CourseController(api));
   },
 
+  rawCourseController: async ({ request }, use) => {
+    await use(new CourseController(request));
+  },
+
   categoryController: async ({ api }, use) => {
     await use(new CategoryController(api));
   },
 
-  createDraftCourse: async ({ courseController, adminToken }, use) => {
-    const createdIds: string[] = [];
+  courseIdsToDelete: async ({ courseController, adminToken }, use) => {
+    const ids: string[] = [];
+    await use(ids);
+    for (const id of ids) {
+      await courseController.deleteCourse(id, adminToken);
+    }
+  },
+
+  createDraftCourse: async (
+    { courseController, adminToken, courseIdsToDelete },
+    use,
+  ) => {
     await use(async (overrides) => {
       const data = buildCourseData(overrides);
       const response = await base.step(
         "precondition: admin creates a draft course",
         () => courseController.createCourse(adminToken, data),
       );
-      const { id } = await response.json();
-      createdIds.push(id);
-      return { id, title: data.title };
+      const { id, slug } = await response.json();
+      courseIdsToDelete.push(id);
+      return { id, title: data.title, slug };
     });
-    for (const id of createdIds) {
-      await courseController.deleteCourse(id, adminToken);
-    }
   },
 
   draftCourse: async ({ createDraftCourse }, use) => {
