@@ -15,6 +15,4 @@ export type TokenRequestData = Pick<UserFields, "email" | "password"> & {
 
 export type CreatedUser = RegisterUserData & Pick<UserFields, "id">;
 
-export type UpdateUserData = Partial<
-  Pick<UserFields, "name" | "email" | "isActive">
->;
+export type UpdateUserData = Record<string, unknown>;
