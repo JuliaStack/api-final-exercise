@@ -62,7 +62,7 @@ test.describe(
     }) => {
       const payload = buildUserData();
 
-      await test.step("successful user registration", () =>
+      await test.step("precondition: successful user registration", () =>
         userController.registerUser(payload));
 
       const response = await test.step("existing user registration", () =>

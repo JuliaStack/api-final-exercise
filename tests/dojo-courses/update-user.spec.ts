@@ -9,8 +9,9 @@ test.describe("update user info", { tag: ["@regression", "@smoke"] }, () => {
       adminToken,
       userToken,
     }) => {
-      const userInfoResponse = await test.step("get user before update", () =>
-        userController.getUserInfo(userToken));
+      const userInfoResponse =
+        await test.step("precondition: get user before update", () =>
+          userController.getUserInfo(userToken));
       const userBeforeUpdate = await userInfoResponse.json();
 
       const payload = buildPayload();
