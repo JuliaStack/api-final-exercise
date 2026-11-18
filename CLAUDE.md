@@ -19,7 +19,7 @@ npm run db:studio    # Prisma Studio on :5555
 npm run build        # prisma generate && next build
 
 npm test                                            # all Playwright tests
-npx playwright test tests/dojo-courses/get-user-info.spec.ts   # one file
+npx playwright test tests/dojo-courses/users/get-user-info.spec.ts   # one file
 npx playwright test -g "API-010"                    # one test by id/title
 npx playwright test --grep @smoke                   # by tag (@smoke, @regression)
 
@@ -42,7 +42,7 @@ Layered; each layer only depends on the ones below it:
 - `app/controllers/` — thin wrappers over `APIRequestContext` extending `BaseController`. They make the HTTP call and return the raw response; **no assertions**.
 - `app/json-schemas/` — Zod schemas for response bodies; specs assert with `schema.safeParse(json)` and `expect(result.error?.issues ?? []).toEqual([])`.
 - `fixtures.ts` — the single `test`/`expect` export; specs must import from here, not `@playwright/test`. Fixture chain: `api` → `userController` → `registeredUser` → `userToken`; plus `adminToken`.
-- `dojo-courses/*.spec.ts` — the specs.
+- `dojo-courses/<domain>/*.spec.ts` — the specs, grouped by domain: `auth/`, `users/`, `courses/` (`global-setup.ts` stays in the root of `dojo-courses/`).
 
 Key convention: two controllers exist on purpose.
 - `userController` uses the `api` context with `failOnStatusCode: true`, so it **throws on non-2xx**. Use it for Arrange steps and happy paths.

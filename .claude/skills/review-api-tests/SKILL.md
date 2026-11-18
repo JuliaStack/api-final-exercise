@@ -120,7 +120,7 @@ Verdict, one of:
 verdict: Fix 2 blocker(s) first
 reviewed: 2026-11-18
 files:
-  - tests/dojo-courses/update-user.spec.ts
+  - tests/dojo-courses/users/update-user.spec.ts
   - tests/app/test-data/update-user-data.ts
 ---
 
@@ -135,7 +135,7 @@ files:
 
 ## Blockers
 
-- [ ] **`tests/dojo-courses/x.spec.ts:42`** — what is wrong.
+- [ ] **`tests/dojo-courses/<domain>/x.spec.ts:42`** — what is wrong.
       **Why:** the risk or the rule it breaks (name the sibling file it should match).
       **Fix:** the smallest change; a short snippet only if it isn't obvious.
 

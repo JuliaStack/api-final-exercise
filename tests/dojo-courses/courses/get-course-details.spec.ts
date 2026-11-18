@@ -1,10 +1,10 @@
 import {
   courseDetailSchema,
   type CourseDetail,
-} from "../app/json-schemas/course";
-import { nonExistingCourseId } from "../app/test-data/course-data";
-import { nonAdminCourseDetailsCallers } from "../app/test-data/non-admin-callers-data";
-import { expect, test } from "../fixtures";
+} from "../../app/json-schemas/course";
+import { nonExistingCourseId } from "../../app/test-data/course-data";
+import { nonAdminCourseDetailsCallers } from "../../app/test-data/non-admin-callers-data";
+import { expect, test } from "../../fixtures";
 
 test.describe("get course by id", () => {
   test(

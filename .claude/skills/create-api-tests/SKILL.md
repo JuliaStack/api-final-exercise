@@ -19,7 +19,7 @@ The goal is tests that protect **critical business scenarios** and look as if th
    - _Error guessing_: only for risky spots you can actually see in the route's code.
 3. **Edge cases only on explicit request.** By default, don't add missing keys, exotic formats, boundary values, unicode or oversized bodies. If you notice an edge case worth covering, mention it in one line in your reply, but don't write the test.
 4. **No tests for the sake of tests.** Don't write:
-   - duplicates of existing tests (check `tests/dojo-courses/` first);
+   - duplicates of existing tests (check `tests/dojo-courses/` and its `auth/`, `users/`, `courses/` subfolders first);
    - cases from an equivalence class that is already covered;
    - separate checks for fields the Zod schema already guarantees (only assert values that depend on the request: email, name, updated fields);
    - checks of framework or library behavior rather than the API's business logic;
@@ -66,7 +66,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
 | Controller     | `tests/app/controllers/<domain>-controller.ts` | `extends BaseController`; one method = one HTTP call, returns the `response`, **no assertions**. Paths have no leading `/` (`"api/courses"`). Pass the token as `headers: { authorization: \`Bearer ${token}\` }`.    |
 | Schema         | `tests/app/json-schemas/<domain>.ts`           | `z.strictObject`, a `// Response body of METHOD /api/...` comment, and an exported `type Xxx = z.infer<...>`.                                                                                                         |
 | Fixtures       | `tests/fixtures.ts`                            | Only when a precondition repeats. For a new controller, add a pair: `xxxController` (on `api`, throws on non-2xx) and `rawXxxController` (on `request`). Wrap preconditions in `base.step("precondition: ...", ...)`. |
-| Spec           | `tests/dojo-courses/<flow>.spec.ts`            | See below.                                                                                                                                                                                                            |
+| Spec           | `tests/dojo-courses/<domain>/<flow>.spec.ts`   | See below.                                                                                                                                                                                                            |
 
 ### 3. Spec file structure
 
@@ -94,7 +94,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
 ```bash
 npx tsc --noEmit
 npx prettier --check tests
-npx playwright test tests/dojo-courses/<flow>.spec.ts
+npx playwright test tests/dojo-courses/<domain>/<flow>.spec.ts
 ```
 
 The default `BASE_URL` is a remote server; for a local one use `BASE_URL=http://localhost:3000/ npx playwright test ...`. If the tests couldn't be run, say so plainly and include the error output.
