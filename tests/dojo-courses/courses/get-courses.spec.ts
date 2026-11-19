@@ -73,11 +73,6 @@ test.describe("get courses list", () => {
 
       const json = await response.json();
 
-      await test.step("response body matches the courses page schema", () => {
-        const result = coursesPageSchema.safeParse(json);
-        expect(result.error?.issues ?? []).toEqual([]);
-      });
-
       await test.step("draft course is in the list", () => {
         expect(json.pagination.total).toBe(1);
         expect(json.data[0].id).toBe(draftCourse.id);

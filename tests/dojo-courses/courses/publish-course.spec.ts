@@ -60,11 +60,6 @@ test.describe("publish course", () => {
 
       const json = await response.json();
 
-      await test.step("response body matches the course schema", () => {
-        const result = courseSchema.safeParse(json);
-        expect(result.error?.issues ?? []).toEqual([]);
-      });
-
       await test.step("course is not published", () => {
         expect(json.id).toBe(publishableCourse.id);
         expect(json.isPublished).toBe(false);

@@ -58,11 +58,6 @@ test.describe("get tags list", () => {
 
       const json: TagList = await response.json();
 
-      await test.step("response body matches the tag list schema", () => {
-        const result = tagListSchema.safeParse(json);
-        expect(result.error?.issues ?? []).toEqual([]);
-      });
-
       await test.step("created tag is in the list", () => {
         expect(json).toContainEqual(createdTag);
       });

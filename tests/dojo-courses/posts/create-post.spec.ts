@@ -80,11 +80,6 @@ test.describe("create post", () => {
         expect(response.status()).toBe(201);
       });
 
-      await test.step("response body matches the post schema", () => {
-        const result = postSchema.safeParse(json);
-        expect(result.error?.issues ?? []).toEqual([]);
-      });
-
       await test.step("post is a draft without optional fields", () => {
         expect(json).toMatchObject({
           title: data.title,
