@@ -84,6 +84,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
   const result = xxxSchema.safeParse(json);
   expect(result.error?.issues ?? []).toEqual([]);
   ```
+- **Schema check: once per endpoint, in the `@smoke` test.** Exception: an endpoint that has different schemas (e.g. `courseDetailSchema` after `courseSchema`).
 - **Value checks on one object.** When **more than 2** fields of the same response body (or of a follow-up GET) are compared with expected values, check them in **one** `test.step` with a single `expect(json).toMatchObject({ ... })`, not one `expect(json.field).toBe(...)` per field. Up to 2 field checks may stay as plain `expect(...).toBe(...)` lines (e.g. `title` and `slug`). A failure then shows every wrong field at once, and this counts as "one check" for the one-check-per-step rule. Build the expected values once (e.g. `const expectedFields = { ... }`) and reuse the object for the response and for the follow-up GET. Compute derived values (`String(price)`, `JSON.stringify(list)`) inside that object. For a nested array use `toMatchObject` with `expect.objectContaining(...)` per element; the array length still has to match. Keep a plain `toBe` / `toContain` for one or two fields. Don't use `expect.soft`; the suite has no use for it.
 - Use `xxxController` for Arrange steps and happy paths; use `rawXxxController` for the request under test in negative scenarios.
 - **Status code checks.** `xxxController` runs on `api` with `failOnStatusCode: true`, so it already throws on any non-2xx. In positive scenarios:
