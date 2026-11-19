@@ -54,6 +54,9 @@ type Fixtures = {
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
   tagController: TagController;
+  rawTagController: TagController;
+  // Ids pushed here are deleted as admin in teardown, even if the test fails.
+  tagIdsToDelete: string[];
   // Creates a tag as admin; every created tag is deleted in teardown.
   createTag: (overrides?: Partial<CreateTagData>) => Promise<CreatedTag>;
   createdTag: CreatedTag;
@@ -217,20 +220,28 @@ export const test = base.extend<Fixtures>({
     await use(new TagController(api));
   },
 
-  createTag: async ({ tagController, adminToken }, use) => {
+  rawTagController: async ({ request }, use) => {
+    await use(new TagController(request));
+  },
+
+  tagIdsToDelete: async ({ tagController, adminToken }, use) => {
     const ids: string[] = [];
+    await use(ids);
+    for (const id of ids) {
+      await tagController.deleteTag(id, adminToken);
+    }
+  },
+
+  createTag: async ({ tagController, adminToken, tagIdsToDelete }, use) => {
     await use(async (overrides) => {
       const response = await base.step(
         "precondition: admin creates a tag",
         () => tagController.createTag(adminToken, buildTagData(overrides)),
       );
       const tag: CreatedTag = await response.json();
-      ids.push(tag.id);
+      tagIdsToDelete.push(tag.id);
       return tag;
     });
-    for (const id of ids) {
-      await tagController.deleteTag(id, adminToken);
-    }
   },
 
   createdTag: async ({ createTag }, use) => {

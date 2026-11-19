@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-const tagSchema = z.strictObject({
+// Response body of POST /api/tags (and one element of GET /api/tags)
+export const tagSchema = z.strictObject({
   id: z.cuid(),
   name: z.string().min(2),
   slug: z.string().min(1),

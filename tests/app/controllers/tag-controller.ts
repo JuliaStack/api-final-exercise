@@ -10,9 +10,11 @@ export class TagController extends BaseController {
     });
   }
 
-  async createTag(accessToken: string, data: CreateTagData) {
+  async createTag(accessToken: string | undefined, data: CreateTagData) {
     return this.request.post("api/tags", {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: accessToken
+        ? { authorization: `Bearer ${accessToken}` }
+        : undefined,
       data,
     });
   }
