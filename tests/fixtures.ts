@@ -1,6 +1,7 @@
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
+import { PostController } from "./app/controllers/post-controller";
 import { TagController } from "./app/controllers/tag-controller";
 import { UserController } from "./app/controllers/user-controller";
 import type {
@@ -10,6 +11,7 @@ import type {
   CreatedCourse,
   CreateCourseData,
 } from "./app/types/course";
+import type { CreatedPost, CreatePostData } from "./app/types/post";
 import type { CreatedTag, CreateTagData } from "./app/types/tag";
 import type { CreatedUser } from "./app/types/user";
 import {
@@ -18,6 +20,7 @@ import {
   buildCourseData,
   buildUpdateCourseData,
 } from "./app/test-data/course-data";
+import { buildPostData } from "./app/test-data/post-data";
 import { buildTagData } from "./app/test-data/tag-data";
 import {
   adminCredentials,
@@ -60,6 +63,12 @@ type Fixtures = {
   // Creates a tag as admin; every created tag is deleted in teardown.
   createTag: (overrides?: Partial<CreateTagData>) => Promise<CreatedTag>;
   createdTag: CreatedTag;
+  postController: PostController;
+  rawPostController: PostController;
+  // Ids pushed here are deleted as admin in teardown, even if the test fails.
+  postIdsToDelete: string[];
+  // Creates a post as admin; every created post is deleted in teardown.
+  createPost: (overrides?: Partial<CreatePostData>) => Promise<CreatedPost>;
 };
 
 export const test = base.extend<Fixtures>({
@@ -246,6 +255,35 @@ export const test = base.extend<Fixtures>({
 
   createdTag: async ({ createTag }, use) => {
     await use(await createTag());
+  },
+
+  postController: async ({ api }, use) => {
+    await use(new PostController(api));
+  },
+
+  rawPostController: async ({ request }, use) => {
+    await use(new PostController(request));
+  },
+
+  postIdsToDelete: async ({ postController, adminToken }, use) => {
+    const ids: string[] = [];
+    await use(ids);
+    for (const id of ids) {
+      await postController.deletePost(id, adminToken);
+    }
+  },
+
+  createPost: async ({ postController, adminToken, postIdsToDelete }, use) => {
+    await use(async (overrides) => {
+      const data = buildPostData(overrides);
+      const response = await base.step(
+        "precondition: admin creates a post",
+        () => postController.createPost(adminToken, data),
+      );
+      const { id, slug } = await response.json();
+      postIdsToDelete.push(id);
+      return { id, title: data.title, slug };
+    });
   },
 });
 
