@@ -17,3 +17,8 @@ export const postSchema = z.strictObject({
 });
 
 export type Post = z.infer<typeof postSchema>;
+
+// Response body of GET /api/posts
+export const postListSchema = z.array(postSchema);
+
+export type PostList = z.infer<typeof postListSchema>;
