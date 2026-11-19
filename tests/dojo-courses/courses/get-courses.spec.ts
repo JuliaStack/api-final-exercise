@@ -15,10 +15,6 @@ test.describe("get courses list", () => {
         await test.step("anonymous user requests the course list", () =>
           courseController.getCourses());
 
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
-
       const json = await response.json();
 
       await test.step("response body matches the courses page schema", () => {
@@ -54,10 +50,6 @@ test.describe("get courses list", () => {
               getToken(userToken),
             ));
 
-        await test.step("status code matches 200", () => {
-          expect(response.status()).toBe(200);
-        });
-
         const json = await response.json();
 
         await test.step("draft course is not in the list", () => {
@@ -78,10 +70,6 @@ test.describe("get courses list", () => {
             { search: draftCourse.title },
             adminToken,
           ));
-
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
 
       const json = await response.json();
 
@@ -110,10 +98,6 @@ test.describe("get courses list", () => {
       const response =
         await test.step("anonymous user searches for the course", () =>
           courseController.getCourses({ search: draftCourse.title }));
-
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
 
       const json = await response.json();
 
@@ -183,10 +167,6 @@ test.describe("get courses list", () => {
             adminToken,
           ));
 
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
-
       const json: CoursesPage = await response.json();
 
       await test.step("only the linked course is returned", () => {
@@ -214,10 +194,6 @@ test.describe("get courses list", () => {
 
       const response = await test.step("admin searches by the token", () =>
         courseController.getCourses({ search: token }, adminToken));
-
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
 
       const json: CoursesPage = await response.json();
 

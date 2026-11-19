@@ -22,10 +22,6 @@ test.describe("get course by id", () => {
         await test.step("anonymous user requests the course by id", () =>
           courseController.getCourse(course.id));
 
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
-
       const json: CourseDetail = await response.json();
 
       await test.step("response body matches the course detail schema", () => {
@@ -50,10 +46,6 @@ test.describe("get course by id", () => {
       const response =
         await test.step("admin requests the draft course by id", () =>
           courseController.getCourse(course.id, adminToken));
-
-      await test.step("status code matches 200", () => {
-        expect(response.status()).toBe(200);
-      });
 
       const json: CourseDetail = await response.json();
 

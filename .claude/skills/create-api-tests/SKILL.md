@@ -60,7 +60,7 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
 
 | Layer          | File                                           | Pattern                                                                                                                                                                                                               |
 | -------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Types          | `tests/app/types/<domain>.ts`                  | A base `XxxFields` type, derived types via `Pick` / `Partial` (like `RegisterUserData`, `TokenRequestData`).                                                                                                            |
+| Types          | `tests/app/types/<domain>.ts`                  | A base `XxxFields` type, derived types via `Pick` / `Partial` (like `RegisterUserData`, `TokenRequestData`).                                                                                                          |
 | Data           | `tests/app/test-data/<domain>-data.ts`         | A `buildXxxData()` builder using faker; unique fields via `getRandomNumber()`; secrets from `process.env`.                                                                                                            |
 | Negative cases | `tests/app/test-data/invalid-<flow>-data.ts`   | An array of `{ id, title, overrides \| buildPayload, status }`. For new cases use `overrides` on top of a builder or `buildPayload: () => ...`, **not** a ready-made `payload` computed at import time.               |
 | Controller     | `tests/app/controllers/<domain>-controller.ts` | `extends BaseController`; one method = one HTTP call, returns the `response`, **no assertions**. Paths have no leading `/` (`"api/courses"`). Pass the token as `headers: { authorization: \`Bearer ${token}\` }`.    |
@@ -85,9 +85,14 @@ Each layer depends only on the ones below it. Add only what doesn't exist yet.
   expect(result.error?.issues ?? []).toEqual([]);
   ```
 - Use `xxxController` for Arrange steps and happy paths; use `rawXxxController` for the request under test in negative scenarios.
+- **Status code checks.** `xxxController` runs on `api` with `failOnStatusCode: true`, so it already throws on any non-2xx. In positive scenarios:
+  - success status is `200`: **don't** add a `status code matches 200` step, it is redundant (as in `get-user-info.spec.ts`);
+  - success status is any other 2xx (e.g. `201`): **do** assert it with a `status code matches 201` step, because the fixture would also accept a `200`.
+  - Negative scenarios: **every** one asserts the status with a `status code matches ${status}` step on the `rawXxxController` response, before the error field. No negative test goes without a status check.
 - Negative scenarios are a `for` loop over an array from `test-data/`. A single case that needs its own precondition (like `API-008` existing user) is a standalone test in the same describe.
-- In negative tests, assert the status and the error field the route actually returns (`error`, `error_description`). If the text is meaningful (it says what went wrong, e.g. `Account is deactivated`, `No valid fields to update`), assert that text with `toContain(...)` (not `toBe`, to stay flexible about wording around it) so the test shows which error is expected. Only when the text is generic or uninformative, assert it is present (`toBeTruthy()`).
+- In negative tests, assert the status and the error field the route actually returns (`error`, `error_description`). If the text is meaningful (it says what went wrong, e.g. `Account is deactivated`, `No valid fields to update`), assert that text with `toContain(...)` so the test shows which error is expected. Only when the text is generic or uninformative, assert it is present (`toBeTruthy()`).
 - Tests are independent: each one creates its own data through fixtures and builders and doesn't rely on seed data, except `adminCredentials`.
+- Treat `tests/dojo-courses/users/` as the reference for ideal coverage and style: its specs plus the fixtures, controller, test-data, types and schemas they use.
 
 ### 4. Verify before handing over
 
@@ -97,7 +102,7 @@ npx prettier --check tests
 npx playwright test tests/dojo-courses/<domain>/<flow>.spec.ts
 ```
 
-The default `BASE_URL` is a remote server; for a local one use `BASE_URL=http://localhost:3000/ npx playwright test ...`. If the tests couldn't be run, say so plainly and include the error output.
+The default `BASE_URL` is a remote training server; for a local one use `BASE_URL=http://localhost:3000/ npx playwright test ...`. If the tests couldn't be run, say so plainly and include the error output.
 
 ## Reply to the user
 

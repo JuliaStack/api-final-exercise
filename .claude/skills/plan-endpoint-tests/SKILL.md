@@ -26,7 +26,9 @@ The plan must protect **critical business scenarios**. Every scenario must answe
    - fields the Zod schema already guarantees (only values that depend on the request are worth asserting);
    - framework or library behavior (Next.js routing, Prisma, Zod internals) rather than the API's business logic;
    - status-only checks where the outcome matters (a change must persist, so the plan says "verify with a follow-up GET").
-5. **Consistency with the suite.** The plan should lean on what already exists (controllers, fixtures, builders, schemas, case-array format) and name what is missing. Don't propose new patterns or libraries.
+   - a separate scenario for a `200` status alone (the `api` context already fails on non-2xx, so a happy path doesn't assert `200`).
+5. **Statuses in the plan.** Every negative scenario names the exact status (and error text) it expects, since the tests will assert it. A positive scenario names its status only when it is not `200` (e.g. `201`); the tests assert that one explicitly.
+6. **Consistency with the suite.** The plan should lean on what already exists (controllers, fixtures, builders, schemas, case-array format) and name what is missing. Don't propose new patterns or libraries.
 
 ## Workflow
 
