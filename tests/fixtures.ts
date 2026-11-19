@@ -1,6 +1,7 @@
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
+import { TagController } from "./app/controllers/tag-controller";
 import { UserController } from "./app/controllers/user-controller";
 import type {
   CourseWithChapters,
@@ -9,6 +10,7 @@ import type {
   CreatedCourse,
   CreateCourseData,
 } from "./app/types/course";
+import type { CreatedTag, CreateTagData } from "./app/types/tag";
 import type { CreatedUser } from "./app/types/user";
 import {
   buildCategoryData,
@@ -16,6 +18,7 @@ import {
   buildCourseData,
   buildUpdateCourseData,
 } from "./app/test-data/course-data";
+import { buildTagData } from "./app/test-data/tag-data";
 import {
   adminCredentials,
   buildUserData,
@@ -50,6 +53,10 @@ type Fixtures = {
   // Creates a category as admin; every created category is deleted in teardown.
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
+  tagController: TagController;
+  // Creates a tag as admin; every created tag is deleted in teardown.
+  createTag: (overrides?: Partial<CreateTagData>) => Promise<CreatedTag>;
+  createdTag: CreatedTag;
 };
 
 export const test = base.extend<Fixtures>({
@@ -204,6 +211,30 @@ export const test = base.extend<Fixtures>({
 
   createdCategory: async ({ createCategory }, use) => {
     await use(await createCategory());
+  },
+
+  tagController: async ({ api }, use) => {
+    await use(new TagController(api));
+  },
+
+  createTag: async ({ tagController, adminToken }, use) => {
+    const ids: string[] = [];
+    await use(async (overrides) => {
+      const response = await base.step(
+        "precondition: admin creates a tag",
+        () => tagController.createTag(adminToken, buildTagData(overrides)),
+      );
+      const tag: CreatedTag = await response.json();
+      ids.push(tag.id);
+      return tag;
+    });
+    for (const id of ids) {
+      await tagController.deleteTag(id, adminToken);
+    }
+  },
+
+  createdTag: async ({ createTag }, use) => {
+    await use(await createTag());
   },
 });
 
