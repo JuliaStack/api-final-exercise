@@ -55,9 +55,11 @@ export class CourseController extends BaseController {
     });
   }
 
-  async deleteCourse(id: string, accessToken: string) {
+  async deleteCourse(id: string, accessToken: string | undefined) {
     return this.request.delete(`api/courses/${id}`, {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: accessToken
+        ? { authorization: `Bearer ${accessToken}` }
+        : undefined,
     });
   }
 

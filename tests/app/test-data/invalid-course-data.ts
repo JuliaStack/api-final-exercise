@@ -77,6 +77,31 @@ export const nonAdminPublishCourseCallers = [
   },
 ];
 
+// Callers that must not delete a course with DELETE /api/courses/{courseId}.
+export const nonAdminDeleteCourseCallers = [
+  {
+    id: "API-072",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-073",
+    title: "expired admin token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-074",
+    title: "regular user",
+    getToken: (userToken: string): string | undefined => userToken,
+    status: 403,
+    error: "Forbidden",
+  },
+];
+
 // Courses with one required content field left empty (a fresh course has them all null).
 export const incompleteCourseData = [
   {
