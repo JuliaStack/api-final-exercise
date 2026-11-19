@@ -13,6 +13,8 @@ on:
     branches: [main]
     paths-ignore:
       - "**.md"
+      - "**/*.md"
+      - ".claude/**"
 
   workflow_dispatch:
     inputs:
