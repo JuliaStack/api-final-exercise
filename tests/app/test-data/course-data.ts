@@ -4,6 +4,7 @@ import type {
   CreateCategoryData,
   CreateChapterData,
   CreateCourseData,
+  UpdateCourseData,
 } from "../types/course";
 
 export function buildCourseData(
@@ -11,6 +12,23 @@ export function buildCourseData(
 ): CreateCourseData {
   return {
     title: `${faker.lorem.words(2)} ${getRandomNumber()}`,
+    ...overrides,
+  };
+}
+
+export function buildUpdateCourseData(
+  overrides: Partial<UpdateCourseData> = {},
+): UpdateCourseData {
+  return {
+    title: `${faker.lorem.words(2)} ${getRandomNumber()}`,
+    description: faker.lorem.sentence(),
+    imageUrl: faker.image.url(),
+    // Fixed cents keep the string form returned by the API predictable ("49.99").
+    price: Number(`${faker.number.int({ min: 1, max: 999 })}.99`),
+    outcomes: [faker.lorem.sentence(), faker.lorem.sentence()],
+    requirements: [faker.lorem.sentence(), faker.lorem.sentence()],
+    authorName: faker.person.fullName(),
+    authorRole: faker.person.jobTitle(),
     ...overrides,
   };
 }

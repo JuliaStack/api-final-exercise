@@ -44,6 +44,8 @@ type Fixtures = {
   draftCourse: CreatedCourse;
   // A draft course with one published and one draft chapter.
   courseWithChapters: CourseWithChapters;
+  // Creates a category as admin; every created category is deleted in teardown.
+  createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
 };
 
@@ -161,14 +163,25 @@ export const test = base.extend<Fixtures>({
     await use({ course: draftCourse, publishedChapter, draftChapter });
   },
 
-  createdCategory: async ({ categoryController, adminToken }, use) => {
-    const response = await base.step(
-      "precondition: admin creates a category",
-      () => categoryController.createCategory(adminToken, buildCategoryData()),
-    );
-    const { id, slug } = await response.json();
-    await use({ id, slug });
-    await categoryController.deleteCategory(id, adminToken);
+  createCategory: async ({ categoryController, adminToken }, use) => {
+    const ids: string[] = [];
+    await use(async () => {
+      const response = await base.step(
+        "precondition: admin creates a category",
+        () =>
+          categoryController.createCategory(adminToken, buildCategoryData()),
+      );
+      const { id, slug } = await response.json();
+      ids.push(id);
+      return { id, slug };
+    });
+    for (const id of ids) {
+      await categoryController.deleteCategory(id, adminToken);
+    }
+  },
+
+  createdCategory: async ({ createCategory }, use) => {
+    await use(await createCategory());
   },
 });
 

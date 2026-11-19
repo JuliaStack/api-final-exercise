@@ -3,14 +3,32 @@ export type CourseFields = {
   title: string;
   slug: string;
   description: string;
+  imageUrl: string;
+  price: number;
   isPublished: boolean;
   categoryIds: string[];
+  outcomes: string[];
+  requirements: string[];
+  authorName: string;
+  authorRole: string;
 };
 
 export type CreateCourseData = Pick<CourseFields, "title">;
 
 export type UpdateCourseData = Partial<
-  Pick<CourseFields, "description" | "isPublished" | "categoryIds">
+  Pick<
+    CourseFields,
+    | "title"
+    | "description"
+    | "imageUrl"
+    | "price"
+    | "isPublished"
+    | "categoryIds"
+    | "outcomes"
+    | "requirements"
+    | "authorName"
+    | "authorRole"
+  >
 >;
 
 export type CreatedCourse = Pick<CourseFields, "id" | "title" | "slug">;

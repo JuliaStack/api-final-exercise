@@ -2,7 +2,7 @@ import { courseSchema } from "../../app/json-schemas/course";
 import { buildCourseData } from "../../app/test-data/course-data";
 import {
   invalidCourseData,
-  nonAdminCreateCallers,
+  nonAdminCreateCourseCallers,
 } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
@@ -100,7 +100,13 @@ test.describe("create course", () => {
 });
 
 test.describe("create course - negative scenarios", () => {
-  for (const { id, title, getToken, status, error } of nonAdminCreateCallers) {
+  for (const {
+    id,
+    title,
+    getToken,
+    status,
+    error,
+  } of nonAdminCreateCourseCallers) {
     test(
       `${id}: ${title} creating a course - should return ${status}`,
       { tag: "@regression" },
