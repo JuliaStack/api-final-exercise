@@ -65,6 +65,7 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
   - Assert: separate `test.step`s, one check each; no new requests between Act and Assert except a follow-up read that verifies a state change persisted.
   - No `// Arrange` / `// Act` / `// Assert` comments.
 - Schema check written exactly as `const result = xxxSchema.safeParse(json); expect(result.error?.issues ?? []).toEqual([]);`.
+- Value checks on one object: **more than 2** fields of the same body compared with expected values must be **one** step with one `expect(json).toMatchObject({ ... })` (expected values built once and reused for the response and the follow-up GET), not a row of `expect(json.field).toBe(...)` lines. One or two field checks may stay plain `toBe` / `toContain`; don't flag them. `expect.soft` is not used. A row of 3 or more per-field `toBe` checks is a nit.
 - `xxxController` for Arrange and happy paths; `rawXxxController` for the request under test in negatives.
 - Negatives: a `for` loop over an array from `test-data/`; a single case with its own precondition (like `API-008`) is a standalone test in the same describe. Each asserts the status **and** the error field the route returns (`error`, `error_description`).
 - Status checks: `xxxController` already throws on non-2xx, so in positives a `status code matches 200` step is redundant (flag it), while any other success status (e.g. `201`) **must** be asserted. **Every** negative must have a `status code matches ${status}` step.
@@ -99,7 +100,7 @@ Severity:
 
 - **Blocker**: fix before committing. A wrong or false-passing test (wrong expected status, an assertion that can't fail, a request in the wrong controller), `tsc`/`prettier` errors, duplicate ids, `test.only`, hardcoded secrets, import from `@playwright/test`, tests that depend on each other or on seed data, more than one request in the Act step.
 - **Should fix**: breaks a project convention or weakens the test (assertions in a controller, import-time `payload`, missing `precondition:` prefix, missing tags, schema not `strictObject`, status-only where persistence matters, missing error-field check in a negative, a missing status check in a negative or in a positive with a non-200 success status, a redundant `status code matches 200` step, a duplicate or low-value test, an unrequested edge case).
-- **Nit**: harmless but inconsistent style and naming (step wording, title phrasing, ordering).
+- **Nit**: harmless but inconsistent style and naming (step wording, title phrasing, ordering, 3 or more per-field `toBe` checks instead of one `toMatchObject`).
 
 Don't pad the report. Skip a finding you can't tie to a rule above or to a concrete sibling file. Don't suggest new abstractions; prefer the lightest fix that brings the code in line with the existing pattern.
 
