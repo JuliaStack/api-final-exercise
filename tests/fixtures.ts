@@ -14,6 +14,7 @@ import {
   buildCategoryData,
   buildChapterData,
   buildCourseData,
+  buildUpdateCourseData,
 } from "./app/test-data/course-data";
 import {
   adminCredentials,
@@ -44,6 +45,8 @@ type Fixtures = {
   draftCourse: CreatedCourse;
   // A draft course with one published and one draft chapter.
   courseWithChapters: CourseWithChapters;
+  // A draft course with all content fields filled in and one published chapter.
+  publishableCourse: CreatedCourse;
   // Creates a category as admin; every created category is deleted in teardown.
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
@@ -161,6 +164,25 @@ export const test = base.extend<Fixtures>({
     );
 
     await use({ course: draftCourse, publishedChapter, draftChapter });
+  },
+
+  publishableCourse: async (
+    { courseController, adminToken, courseWithChapters },
+    use,
+  ) => {
+    const { course } = courseWithChapters;
+    const response = await base.step(
+      "precondition: admin fills in all content fields of the course",
+      () =>
+        courseController.updateCourse(
+          course.id,
+          adminToken,
+          buildUpdateCourseData(),
+        ),
+    );
+    const { id, title, slug } = await response.json();
+
+    await use({ id, title, slug });
   },
 
   createCategory: async ({ categoryController, adminToken }, use) => {

@@ -1,4 +1,4 @@
-import { buildCourseData } from "./course-data";
+import { buildCourseData, buildUpdateCourseData } from "./course-data";
 import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not create a course with POST /api/courses.
@@ -49,6 +49,56 @@ export const nonAdminUpdateCourseCallers = [
     getToken: (userToken: string): string | undefined => userToken,
     status: 403,
     error: "Forbidden",
+  },
+];
+
+// Callers that must not publish a course with PATCH /api/courses/{courseId}/publish.
+export const nonAdminPublishCourseCallers = [
+  {
+    id: "API-067",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-068",
+    title: "expired admin token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-069",
+    title: "regular user",
+    getToken: (userToken: string): string | undefined => userToken,
+    status: 403,
+    error: "Forbidden",
+  },
+];
+
+// Courses with one required content field left empty (a fresh course has them all null).
+export const incompleteCourseData = [
+  {
+    id: "API-063",
+    title: "course without a description",
+    buildPayload: () => buildUpdateCourseData({ description: undefined }),
+    status: 400,
+    error: "Missing required fields (title, description, image, price)",
+  },
+  {
+    id: "API-064",
+    title: "course without an image",
+    buildPayload: () => buildUpdateCourseData({ imageUrl: undefined }),
+    status: 400,
+    error: "Missing required fields (title, description, image, price)",
+  },
+  {
+    id: "API-065",
+    title: "course without a price",
+    buildPayload: () => buildUpdateCourseData({ price: undefined }),
+    status: 400,
+    error: "Missing required fields (title, description, image, price)",
   },
 ];
 

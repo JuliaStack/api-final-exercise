@@ -47,6 +47,14 @@ export class CourseController extends BaseController {
     });
   }
 
+  async publishCourse(id: string, accessToken: string | undefined) {
+    return this.request.patch(`api/courses/${id}/publish`, {
+      headers: accessToken
+        ? { authorization: `Bearer ${accessToken}` }
+        : undefined,
+    });
+  }
+
   async deleteCourse(id: string, accessToken: string) {
     return this.request.delete(`api/courses/${id}`, {
       headers: { authorization: `Bearer ${accessToken}` },

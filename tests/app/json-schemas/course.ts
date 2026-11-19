@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-// Response body of POST /api/courses and PATCH /api/courses/{courseId}
+// Response body of POST /api/courses, PATCH /api/courses/{courseId}
+// and PATCH /api/courses/{courseId}/publish
 export const courseSchema = z.strictObject({
   id: z.cuid(),
   title: z.string().min(3),
