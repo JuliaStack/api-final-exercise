@@ -19,9 +19,11 @@ export class TagController extends BaseController {
     });
   }
 
-  async deleteTag(id: string, accessToken: string) {
+  async deleteTag(id: string, accessToken: string | undefined) {
     return this.request.delete(`api/tags/${id}`, {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: accessToken
+        ? { authorization: `Bearer ${accessToken}` }
+        : undefined,
     });
   }
 }

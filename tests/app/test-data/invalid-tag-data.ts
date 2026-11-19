@@ -62,3 +62,28 @@ export const invalidTagData = [
     error: "Name must be at least 2 characters",
   },
 ];
+
+// Callers that must not delete a tag with DELETE /api/tags/{tagId}.
+export const nonAdminDeleteTagCallers = [
+  {
+    id: "API-087",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-088",
+    title: "expired admin token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-089",
+    title: "regular user",
+    getToken: (userToken: string): string | undefined => userToken,
+    status: 403,
+    error: "Forbidden",
+  },
+];
