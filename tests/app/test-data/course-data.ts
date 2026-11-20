@@ -37,6 +37,9 @@ export function buildChapterData(): CreateChapterData {
   return { title: `${faker.lorem.words(2)} ${getRandomNumber()}` };
 }
 
+// Price of the course a user buys in purchase tests; whole, so the amount is predictable.
+export const purchasableCoursePrice = 80;
+
 // Well-formed id of a course that does not exist.
 export const nonExistingCourseId = "cnonexistingcourse0000000";
 

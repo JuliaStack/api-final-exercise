@@ -45,6 +45,14 @@ export class CourseController extends BaseController {
     });
   }
 
+  // The route reads the body with `req.json()`, so a body is always sent (no body → 500).
+  async purchaseCourse(id: string, accessToken: string | undefined) {
+    return this.request.post(`api/courses/${id}/purchase`, {
+      headers: this.authHeaders(accessToken),
+      data: {},
+    });
+  }
+
   async deleteCourse(id: string, accessToken: string | undefined) {
     return this.request.delete(`api/courses/${id}`, {
       headers: this.authHeaders(accessToken),

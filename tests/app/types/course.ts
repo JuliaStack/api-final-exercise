@@ -68,3 +68,6 @@ export type CourseWithChapters = {
   publishedChapter: CreatedChapter;
   draftChapter: CreatedChapter;
 };
+
+// A published course with a known price.
+export type PublishedCourse = CreatedCourse & Pick<CourseFields, "price">;

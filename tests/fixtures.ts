@@ -2,6 +2,7 @@ import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
 import { PostController } from "./app/controllers/post-controller";
+import { PurchaseController } from "./app/controllers/purchase-controller";
 import { TagController } from "./app/controllers/tag-controller";
 import { UserController } from "./app/controllers/user-controller";
 import type {
@@ -10,6 +11,7 @@ import type {
   CreatedChapter,
   CreatedCourse,
   CreateCourseData,
+  PublishedCourse,
 } from "./app/types/course";
 import type { CreatedPost, CreatePostData } from "./app/types/post";
 import type { CreatedTag, CreateTagData } from "./app/types/tag";
@@ -19,6 +21,7 @@ import {
   buildChapterData,
   buildCourseData,
   buildUpdateCourseData,
+  purchasableCoursePrice,
 } from "./app/test-data/course-data";
 import { buildPostData } from "./app/test-data/post-data";
 import { buildTagData } from "./app/test-data/tag-data";
@@ -75,6 +78,10 @@ type Fixtures = {
   courseWithChapters: CourseWithChapters;
   // A draft course with all content fields filled in and one published chapter.
   publishableCourse: CreatedCourse;
+  // A published course with a known price (`purchasableCoursePrice`), ready to be bought.
+  // It is the same course as `draftCourse` and `courseWithChapters`.
+  publishedCourse: PublishedCourse;
+  purchaseController: PurchaseController;
   // Creates a category as admin; every created category is deleted in teardown.
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
@@ -224,6 +231,33 @@ export const test = base.extend<Fixtures>({
     const { id, title, slug } = await response.json();
 
     await use({ id, title, slug });
+  },
+
+  publishedCourse: async (
+    { courseController, adminToken, courseWithChapters },
+    use,
+  ) => {
+    const { course } = courseWithChapters;
+    const response = await base.step(
+      "precondition: admin fills in all content fields of the course",
+      () =>
+        courseController.updateCourse(
+          course.id,
+          adminToken,
+          buildUpdateCourseData({ price: purchasableCoursePrice }),
+        ),
+    );
+    const { id, title, slug } = await response.json();
+
+    await base.step("precondition: admin publishes the course", () =>
+      courseController.publishCourse(id, adminToken),
+    );
+
+    await use({ id, title, slug, price: purchasableCoursePrice });
+  },
+
+  purchaseController: async ({ api }, use) => {
+    await use(new PurchaseController(api));
   },
 
   createCategory: async ({ categoryController, adminToken }, use) => {
