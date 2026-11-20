@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { tagSchema } from "./tag";
 
-// Response body of POST /api/posts (and one element of GET /api/posts)
+// Response body of POST /api/posts and PATCH /api/posts/{postId} (and one element of GET /api/posts)
 export const postSchema = z.strictObject({
   id: z.cuid(),
   title: z.string().min(3),

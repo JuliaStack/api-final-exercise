@@ -27,6 +27,31 @@ export const nonAdminCreatePostCallers = [
   },
 ];
 
+// Callers that must not update a post with PATCH /api/posts/{postId}.
+export const nonAdminUpdatePostCallers = [
+  {
+    id: "API-107",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-108",
+    title: "expired admin token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-109",
+    title: "regular user",
+    getToken: (userToken: string): string | undefined => userToken,
+    status: 403,
+    error: "Forbidden",
+  },
+];
+
 export const invalidPostData = [
   {
     id: "API-096",

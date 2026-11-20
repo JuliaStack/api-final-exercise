@@ -18,3 +18,5 @@ export type CreatePostData = Pick<PostFields, "title"> &
   >;
 
 export type CreatedPost = Pick<PostFields, "id" | "title" | "slug">;
+
+export type UpdatePostData = Partial<CreatePostData>;
