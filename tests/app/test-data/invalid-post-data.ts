@@ -52,6 +52,31 @@ export const nonAdminUpdatePostCallers = [
   },
 ];
 
+// Callers that must not delete a post with DELETE /api/posts/{postId}.
+export const nonAdminDeletePostCallers = [
+  {
+    id: "API-111",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-112",
+    title: "expired admin token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-113",
+    title: "regular user",
+    getToken: (userToken: string): string | undefined => userToken,
+    status: 403,
+    error: "Forbidden",
+  },
+];
+
 export const invalidPostData = [
   {
     id: "API-096",
