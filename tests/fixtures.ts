@@ -28,6 +28,28 @@ import {
   buildTokenRequestData,
 } from "./app/test-data/user-data";
 
+// Teardown: tries to delete every id, even when one deletion fails,
+// then fails the test if any deletion failed so leftovers are not hidden.
+async function deleteEach(
+  ids: string[],
+  remove: (id: string) => Promise<unknown>,
+) {
+  const errors: unknown[] = [];
+  for (const id of ids) {
+    try {
+      await remove(id);
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  if (errors.length) {
+    throw new AggregateError(
+      errors,
+      `teardown: ${errors.length} of ${ids.length} deletions failed`,
+    );
+  }
+}
+
 type Fixtures = {
   // Request context that throws on any non-2xx/3xx response.
   // Use it for Arrange steps and happy paths; use the default `request`
@@ -132,9 +154,9 @@ export const test = base.extend<Fixtures>({
   courseIdsToDelete: async ({ courseController, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
-    for (const id of ids) {
-      await courseController.deleteCourse(id, adminToken);
-    }
+    await deleteEach(ids, (id) =>
+      courseController.deleteCourse(id, adminToken),
+    );
   },
 
   createDraftCourse: async (
@@ -216,9 +238,9 @@ export const test = base.extend<Fixtures>({
       ids.push(id);
       return { id, slug };
     });
-    for (const id of ids) {
-      await categoryController.deleteCategory(id, adminToken);
-    }
+    await deleteEach(ids, (id) =>
+      categoryController.deleteCategory(id, adminToken),
+    );
   },
 
   createdCategory: async ({ createCategory }, use) => {
@@ -236,9 +258,7 @@ export const test = base.extend<Fixtures>({
   tagIdsToDelete: async ({ tagController, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
-    for (const id of ids) {
-      await tagController.deleteTag(id, adminToken);
-    }
+    await deleteEach(ids, (id) => tagController.deleteTag(id, adminToken));
   },
 
   createTag: async ({ tagController, adminToken, tagIdsToDelete }, use) => {
@@ -268,9 +288,7 @@ export const test = base.extend<Fixtures>({
   postIdsToDelete: async ({ postController, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
-    for (const id of ids) {
-      await postController.deletePost(id, adminToken);
-    }
+    await deleteEach(ids, (id) => postController.deletePost(id, adminToken));
   },
 
   createPost: async ({ postController, adminToken, postIdsToDelete }, use) => {
