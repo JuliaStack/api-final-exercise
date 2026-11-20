@@ -1,7 +1,10 @@
 import { faker } from "@faker-js/faker";
 import { postSchema, type Post } from "../../app/json-schemas/post";
 import { nonAdminUpdatePostCallers } from "../../app/test-data/invalid-post-data";
-import { buildPostData } from "../../app/test-data/post-data";
+import {
+  buildPostData,
+  nonExistingPostId,
+} from "../../app/test-data/post-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("update post", () => {
@@ -257,4 +260,32 @@ test.describe("update post - negative scenarios", () => {
       },
     );
   }
+
+  test.fail(
+    "API-115: admin updating a non-existing post - should return 404",
+    {
+      tag: "@regression",
+      annotation: {
+        type: "known bug",
+        description:
+          "the route calls prisma.post.update without a lookup and returns 500 for a missing id",
+      },
+    },
+    async ({ rawPostController, adminToken }) => {
+      const data = buildPostData();
+
+      const response =
+        await test.step("admin updates a non-existing post", () =>
+          rawPostController.updatePost(nonExistingPostId, adminToken, data));
+
+      await test.step("status code matches 404", () => {
+        expect(response.status()).toBe(404);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Post not found");
+      });
+    },
+  );
 });

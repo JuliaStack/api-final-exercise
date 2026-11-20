@@ -1,6 +1,6 @@
 import type { CreatedTag } from "../../app/types/tag";
 import { nonAdminDeleteTagCallers } from "../../app/test-data/invalid-tag-data";
-import { buildTagData } from "../../app/test-data/tag-data";
+import { buildTagData, nonExistingTagId } from "../../app/test-data/tag-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("delete tag", () => {
@@ -71,4 +71,29 @@ test.describe("delete tag - negative scenarios", () => {
       },
     );
   }
+
+  test.fail(
+    "API-116: admin deleting a non-existing tag - should return 404",
+    {
+      tag: "@regression",
+      annotation: {
+        type: "known bug",
+        description:
+          "the route calls prisma.tag.delete without a lookup and returns 500 for a missing id",
+      },
+    },
+    async ({ rawTagController, adminToken }) => {
+      const response = await test.step("admin deletes a non-existing tag", () =>
+        rawTagController.deleteTag(nonExistingTagId, adminToken));
+
+      await test.step("status code matches 404", () => {
+        expect(response.status()).toBe(404);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Tag not found");
+      });
+    },
+  );
 });

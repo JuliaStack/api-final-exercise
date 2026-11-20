@@ -10,3 +10,5 @@ export function buildTagData(
     ...overrides,
   };
 }
+
+export const nonExistingTagId = "cnonexistingtag0000000000";

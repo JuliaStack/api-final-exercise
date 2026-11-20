@@ -3,7 +3,10 @@ import {
   courseSchema,
   type CourseDetail,
 } from "../../app/json-schemas/course";
-import { buildUpdateCourseData } from "../../app/test-data/course-data";
+import {
+  buildUpdateCourseData,
+  nonExistingCourseId,
+} from "../../app/test-data/course-data";
 import { nonAdminUpdateCourseCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
@@ -217,4 +220,36 @@ test.describe("update course - negative scenarios", () => {
       },
     );
   }
+
+  test.fail(
+    "API-117: admin updating a non-existing course - should return 404",
+    {
+      tag: "@regression",
+      annotation: {
+        type: "known bug",
+        description:
+          "the route calls prisma.course.update without a lookup and returns 500 for a missing id",
+      },
+    },
+    async ({ rawCourseController, adminToken }) => {
+      const data = buildUpdateCourseData();
+
+      const response =
+        await test.step("admin updates a non-existing course", () =>
+          rawCourseController.updateCourse(
+            nonExistingCourseId,
+            adminToken,
+            data,
+          ));
+
+      await test.step("status code matches 404", () => {
+        expect(response.status()).toBe(404);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Course not found");
+      });
+    },
+  );
 });

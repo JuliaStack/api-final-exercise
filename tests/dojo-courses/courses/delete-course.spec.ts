@@ -1,6 +1,7 @@
 import {
   buildChapterData,
   buildCourseData,
+  nonExistingCourseId,
 } from "../../app/test-data/course-data";
 import { nonAdminDeleteCourseCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
@@ -88,4 +89,30 @@ test.describe("delete course - negative scenarios", () => {
       },
     );
   }
+
+  test.fail(
+    "API-118: admin deleting a non-existing course - should return 404",
+    {
+      tag: "@regression",
+      annotation: {
+        type: "known bug",
+        description:
+          "the route calls prisma.course.delete without a lookup and returns 500 for a missing id",
+      },
+    },
+    async ({ rawCourseController, adminToken }) => {
+      const response =
+        await test.step("admin deletes a non-existing course", () =>
+          rawCourseController.deleteCourse(nonExistingCourseId, adminToken));
+
+      await test.step("status code matches 404", () => {
+        expect(response.status()).toBe(404);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Course not found");
+      });
+    },
+  );
 });
