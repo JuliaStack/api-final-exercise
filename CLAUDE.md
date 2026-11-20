@@ -31,7 +31,7 @@ Notes:
 - Playwright's default `BASE_URL` is a **remote** training server (`http://104.168.59.50/training-api/`), not localhost. To test a local server: `BASE_URL=http://localhost:3000/ npm test`. Keep the trailing slash; request paths in controllers have no leading slash.
 - Tests need `.env` values beyond the app's: `BASE_URL`, `DEFAULT_USER_PASSWORD`, `ADMIN_EMAIL` (see `.env.example`). The admin account's password is `DEFAULT_USER_PASSWORD`.
 - `tests/dojo-courses/global-setup.ts` does a `GET api/courses` smoke check before any test runs, so an unreachable `BASE_URL` fails the whole run immediately.
-- `npm run lint` is defined but there is no ESLint config in the repo.
+- `npm run lint` uses `eslint.config.mjs`: Next's configs for the whole repo, plus `eslint-plugin-playwright` (recommended) for `tests/**`. In tests, React's `rules-of-hooks` (false positives on fixture `use`) and `playwright/consistent-spacing-between-blocks` are off; `scratch/` and `src/generated/` are ignored.
 
 ## Test suite architecture (`tests/`)
 

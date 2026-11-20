@@ -10,6 +10,8 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   use: {
     baseURL: process.env.BASE_URL || "http://104.168.59.50/training-api/",
+    // Keep the trace of the first retry, so CI failures show requests and responses.
+    trace: "on-first-retry",
   },
   reporter: [["html", { open: "never" }]],
 });
