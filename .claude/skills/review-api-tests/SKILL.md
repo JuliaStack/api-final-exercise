@@ -1,6 +1,6 @@
 ---
 name: review-api-tests
-description: Use before committing new or changed Playwright API tests in `tests/` to review them against the project's best practices and check they are consistent with the rest of the suite. Never edits tests or commits; when the verdict is not "Ready to commit" it writes the fixes to a markdown file in `docs/test-reviews/`. Triggers on "review my tests", "check the tests before commit", "are my tests consistent", "review API tests", "code review the tests", "перевір тести перед комітом", "зроби рев'ю тестів", "чи відповідають тести патернам проєкту". Checks the layers (types → test-data → controller → json-schema → fixture → spec), spec structure (Arrange → Act → Assert, steps, tags, ids), test value (critical business risk, no duplicates, no unrequested edge cases) and cross-file consistency. The rules come from the `create-api-tests` skill.
+description: Use before committing new or changed Playwright API tests in `tests/` to review them against the project's best practices and check they are consistent with the rest of the suite. Never edits tests or commits; when the verdict is not "Ready to commit" it writes the fixes to a markdown file `docs/<slug>/review.md`. Triggers on "review my tests", "check the tests before commit", "are my tests consistent", "review API tests", "code review the tests", "перевір тести перед комітом", "зроби рев'ю тестів", "чи відповідають тести патернам проєкту". Checks the layers (types → test-data → controller → json-schema → fixture → spec), spec structure (Arrange → Act → Assert, steps, tags, ids), test value (critical business risk, no duplicates, no unrequested edge cases) and cross-file consistency. The rules come from the `create-api-tests` skill.
 model: opus
 effort: high
 ---
@@ -9,7 +9,7 @@ effort: high
 
 Review tests the way the project's author would: does each new or changed test follow the suite's patterns, protect a real business risk, and look like it was written by the same person as its neighbours?
 
-This skill **only reviews**: it never edits `tests/`, stages or commits. Besides the chat reply, its only output is a review file in `docs/test-reviews/` (step 5). The user decides what to fix.
+This skill **only reviews**: it never edits `tests/`, stages or commits. Besides the chat reply, its only output is a review file `docs/<slug>/review.md` (step 5). The user decides what to fix.
 
 `create-api-tests` is the source of truth; the checklist below is a condensed copy. If a rule is unclear or the two disagree, read `.claude/skills/create-api-tests/SKILL.md`. Code in `tests/` wins over `docs/` (which may lag).
 
@@ -115,7 +115,7 @@ Verdict, one of:
 
 **The review file** (for any verdict except `Ready to commit`):
 
-- Path: `docs/test-reviews/<flow>.md`, kebab-case, named after the main spec or flow (e.g. `update-user.md`); create the directory if needed. `docs/` is gitignored: this is a working note.
+- Path: `docs/<slug>/review.md`, where `<slug>` is the endpoint's folder, shared with its `plan.md` and `pipeline.md`: `<method>-<resource-path>`, kebab-case, path params dropped (e.g. `docs/patch-admin-users/review.md`, next to `docs/patch-admin-users/plan.md`). Don't name the folder after the spec or the flow; reuse the existing folder. Create the directory if needed. `docs/` is gitignored: this is a working note.
 - If the file exists, it is the previous review of the same flow: read it, drop findings that are now fixed, and replace the file. Don't append.
 - Use exactly this structure, terse, one fix per checkbox:
 

@@ -1,6 +1,6 @@
 ---
 name: orchestrate-api-tests
-description: Use when the user hands over an endpoint of the Dojo API (e.g. "POST /api/courses/{id}/purchase", a route file, or a resource name) and wants the whole test development done end to end, or wants to resume an interrupted run. Decides whether a test plan is needed, then runs `plan-endpoint-tests` (if needed) → `create-api-tests` → `review-api-tests` (+ up to 2 automatic fix rounds) as subagents, reports after each stage, and keeps a resumable state file in `docs/test-pipeline/`. Triggers on "orchestrate tests for {endpoint}", "full pipeline for {endpoint}", "take {endpoint} from plan to review", "resume the test pipeline", "/orchestrate-api-tests resume", "проведи ендпоінт через увесь цикл", "зроби тести під ключ", "продовж пайплайн". Never commits.
+description: Use when the user hands over an endpoint of the Dojo API (e.g. "POST /api/courses/{id}/purchase", a route file, or a resource name) and wants the whole test development done end to end, or wants to resume an interrupted run. Decides whether a test plan is needed, then runs `plan-endpoint-tests` (if needed) → `create-api-tests` → `review-api-tests` (+ up to 2 automatic fix rounds) as subagents, reports after each stage, and keeps a resumable state file `docs/<slug>/pipeline.md`. Triggers on "orchestrate tests for {endpoint}", "full pipeline for {endpoint}", "take {endpoint} from plan to review", "resume the test pipeline", "/orchestrate-api-tests resume", "проведи ендпоінт через увесь цикл", "зроби тести під ключ", "продовж пайплайн". Never commits.
 model: sonnet
 effort: high
 ---
@@ -15,9 +15,9 @@ One pipeline is for **one method of one route**.
 
 | Stage           | Skill                         | Agent `model` | Agent `effort` | Input                                          | Output (artifact)                         |
 | --------------- | ----------------------------- | ------------- | -------------- | ---------------------------------------------- | ----------------------------------------- |
-| plan (optional) | `plan-endpoint-tests`         | `opus`        | `high`         | endpoint + route file                          | `docs/test-plans/<slug>.md`               |
+| plan (optional) | `plan-endpoint-tests`         | `opus`        | `high`         | endpoint + route file                          | `docs/<slug>/plan.md`                     |
 | create          | `create-api-tests`            | `sonnet`      | `high`         | plan file, or the endpoint if there is no plan | changed files under `tests/`              |
-| review          | `review-api-tests`            | `sonnet`      | `high`         | the files create changed                       | verdict (+ `docs/test-reviews/<flow>.md`) |
+| review          | `review-api-tests`            | `sonnet`      | `high`         | the files create changed                       | verdict (+ `docs/<slug>/review.md`)     |
 | fix-1, fix-2    | `create-api-tests` (fix mode) | `sonnet`      | `high`         | review file                                    | changed files under `tests/`              |
 
 The model and effort per stage are fixed by the user. Always pass them to the Agent tool, even when resuming.
@@ -28,8 +28,8 @@ The model and effort per stage are fixed by the user. Always pass them to the Ag
 
 ### 0. Start or resume
 
-- **The input is "resume"** (or no endpoint is given): list `docs/test-pipeline/*.md` whose table has a stage that is not `done`/`skipped`. If there is one, take it. If there are several, ask which one. If there are none, say so and stop. Then go to **Resuming** below.
-- **An endpoint is given:** resolve it (step 1), compute `<slug>`, and check `docs/test-pipeline/<slug>.md`. If it exists with unfinished stages, show its table and ask: continue from where it stopped, or start over? Starting over resets the table; it never deletes test files.
+- **The input is "resume"** (or no endpoint is given): list `docs/*/pipeline.md` whose table has a stage that is not `done`/`skipped`. If there is one, take it. If there are several, ask which one. If there are none, say so and stop. Then go to **Resuming** below.
+- **An endpoint is given:** resolve it (step 1), compute `<slug>`, and check `docs/<slug>/pipeline.md`. If it exists with unfinished stages, show its table and ask: continue from where it stopped, or start over? Starting over resets the table; it never deletes test files.
 
 ### 1. Resolve the endpoint
 
@@ -54,7 +54,7 @@ Tell the user the decision in one line with the reason, e.g. `Plan: yes (require
 
 ### 3. Create the state file
 
-Write `docs/test-pipeline/<slug>.md` (create the directory if needed; `docs/` is gitignored, which is fine):
+Write `docs/<slug>/pipeline.md` (create the directory if needed; `docs/` is gitignored, which is fine):
 
 ```markdown
 ---
@@ -91,7 +91,7 @@ You are running one stage of the test pipeline, orchestrated by `orchestrate-api
 Load the `<skill>` skill with the Skill tool and follow it, in its "Orchestrated mode".
 Stage: <stage>
 Endpoint: <METHOD /api/path>   Route file: <route>
-State file: docs/test-pipeline/<slug>.md
+State file: docs/<slug>/pipeline.md
 Input: <plan file path | "no plan, analyze the endpoint yourself" | files to review | review file to apply>
 Resume: <no | yes: the previous attempt stopped at checkpoint "<checkpoint>"; files already written: <list>. These are your own unfinished work: continue from the first unfinished item, don't redo or overwrite finished work.>
 User notes: <scope, edge cases the user asked for, answers to earlier questions, or "none">

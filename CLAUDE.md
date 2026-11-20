@@ -56,7 +56,7 @@ When adding a test, open the corresponding route in `src/app/api/...` first to s
 
 ## Test-writing skills (`.claude/skills/`)
 
-`plan-endpoint-tests` → `create-api-tests` → `review-api-tests`, chained by `orchestrate-api-tests` (runs each as a subagent and keeps resumable state). They hand work over through files in gitignored `docs/test-plans/`, `docs/test-reviews/` and `docs/test-pipeline/`. `create-api-tests` holds the test-writing rules; none of the skills commit.
+`plan-endpoint-tests` → `create-api-tests` → `review-api-tests`, chained by `orchestrate-api-tests` (runs each as a subagent and keeps resumable state). They hand work over through files in a gitignored per-endpoint folder `docs/<slug>/` (`<method>-<resource-path>`, e.g. `docs/post-courses-purchase/`) holding `plan.md`, `review.md` and `pipeline.md`. `create-api-tests` holds the test-writing rules; none of the skills commit.
 
 ## API architecture (`src/`)
 

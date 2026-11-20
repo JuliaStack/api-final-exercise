@@ -30,14 +30,14 @@ The goal is tests that protect **critical business scenarios** and look as if th
 
 ### Start: was a plan handed over?
 
-1. **A plan was handed over** (a path to a file made by the `plan-endpoint-tests` skill, e.g. `docs/test-plans/post-courses-purchase.md`): work from it and skip steps 0 and 1 below.
+1. **A plan was handed over** (a path to a file made by the `plan-endpoint-tests` skill, e.g. `docs/post-courses-purchase/plan.md`): work from it and skip steps 0 and 1 below.
    - Its **Scenarios** table is the list of tests to write, and its **Reuse and gaps** table is your layer checklist for step 2.
    - Anything under **Not planned** or **Edge cases noticed** stays unwritten unless the user asks.
    - Replace the plan's `S1`, `S2`, ... ids with real `API-NNN` ids (use the "next free id" command from step 0).
    - Read the existing files of each layer before writing. If the route changed after the plan was written, trust the code and tell the user what differs.
    - Go straight to step 2; the user has already seen the scenarios in the plan.
 2. **No plan was handed over:** say so in one line (e.g. "No plan file given, analyzing the endpoint myself") and start working on your own. Don't wait for a plan and don't ask for one. Run steps 0 and 1 as written; step 1 is where the user confirms the scenarios.
-3. **A review file was handed over** (from the `review-api-tests` skill, e.g. `docs/test-reviews/update-user.md`): this is fix mode. Don't add scenarios or tests.
+3. **A review file was handed over** (from the `review-api-tests` skill, e.g. `docs/patch-admin-users/review.md`): this is fix mode. Don't add scenarios or tests.
    - Apply every unchecked item under **Blockers** and **Should fix**, in that order. Apply **Nits** only if asked.
    - Each item gives file:line, what is wrong and the fix. Make that smallest fix, matching the sibling file it names, and change nothing else.
    - After each applied item, change its `- [ ]` to `- [x]` in the review file, so an interrupted run can continue. Leave the rest of the file alone; the next review replaces it.

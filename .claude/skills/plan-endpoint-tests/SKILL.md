@@ -1,6 +1,6 @@
 ---
 name: plan-endpoint-tests
-description: Use when the user hands over an endpoint of the Dojo API (e.g. "POST /api/courses/{id}/purchase", a route file, or a resource name) and wants it analyzed before any test is written. Reads the route code and produces a markdown test plan in `docs/test-plans/` (capabilities, limitations, and a short prioritized list of scenarios, each tied to a business risk) that the `create-api-tests` skill can consume. Triggers on "analyze {endpoint}", "what should we test for {route}", "plan tests for {endpoint}", "make a test plan", "проаналізуй ендпоінт", "який план тестів на {ендпоінт}", "склади список тестів". Writes no test code.
+description: Use when the user hands over an endpoint of the Dojo API (e.g. "POST /api/courses/{id}/purchase", a route file, or a resource name) and wants it analyzed before any test is written. Reads the route code and produces a markdown test plan in `docs/<slug>/plan.md` (capabilities, limitations, and a short prioritized list of scenarios, each tied to a business risk) that the `create-api-tests` skill can consume. Triggers on "analyze {endpoint}", "what should we test for {route}", "plan tests for {endpoint}", "make a test plan", "проаналізуй ендпоінт", "який план тестів на {ендпоінт}", "склади список тестів". Writes no test code.
 model: opus
 effort: high
 ---
@@ -64,7 +64,7 @@ Do not assign `API-NNN` ids. Use `S1`, `S2`, ... so the plan doesn't go stale or
 
 ### 6. Write the plan
 
-Save to `docs/test-plans/<method>-<resource-path>.md`, kebab-case, path params dropped (e.g. `post-courses-purchase.md`). Create the directory if needed. `docs/` is gitignored, which is fine: the plan is a working handoff, not a deliverable. If the file already exists, show the user what would change instead of silently overwriting.
+Save to `docs/<slug>/plan.md`, where `<slug>` is `<method>-<resource-path>`, kebab-case, path params dropped (e.g. `docs/post-courses-purchase/plan.md`). The folder `docs/<slug>/` holds everything for this endpoint (`plan.md`, `review.md`, `pipeline.md`). Create the directory if needed. `docs/` is gitignored, which is fine: the plan is a working handoff, not a deliverable. If the file already exists, show the user what would change instead of silently overwriting.
 
 Use exactly this structure, so the consuming skill can parse it. Keep it terse: tables and one-liners, no prose essays.
 
