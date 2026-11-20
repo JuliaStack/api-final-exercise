@@ -4,14 +4,14 @@ import { BaseController } from "./base-controller";
 export class CategoryController extends BaseController {
   async createCategory(accessToken: string, data: CreateCategoryData) {
     return this.request.post("api/categories", {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: this.authHeaders(accessToken),
       data,
     });
   }
 
   async deleteCategory(id: string, accessToken: string) {
     return this.request.delete(`api/categories/${id}`, {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: this.authHeaders(accessToken),
     });
   }
 }

@@ -16,13 +16,13 @@ export class UserController extends BaseController {
 
   async getUserInfo(accessToken: string) {
     return this.request.get("api/oauth/userinfo", {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: this.authHeaders(accessToken),
     });
   }
 
   async updateUser(id: string, accessToken: string, data: UpdateUserData) {
     return this.request.patch(`api/admin/users/${id}`, {
-      headers: { authorization: `Bearer ${accessToken}` },
+      headers: this.authHeaders(accessToken),
       data,
     });
   }

@@ -49,7 +49,7 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
 - _Types_ (`tests/app/types/`): a base `XxxFields` type, derived via `Pick` / `Partial`; no `any`; no duplicated shapes.
 - _Data_ (`tests/app/test-data/<domain>-data.ts`): `buildXxxData()` builders with faker; uniqueness via `getRandomNumber()`; secrets and credentials from `process.env`, never hardcoded.
 - _Negative cases_ (`invalid-<flow>-data.ts`): array of `{ id, title, overrides | buildPayload, ... }` with a unique `API-NNN` id. New cases use `overrides` or `buildPayload: () => ...`, **not** a ready-made `payload` computed at import time.
-- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, no `.json()`, no logic**. Paths have no leading `/` (`"api/courses"`). Token passed as `headers: { authorization: \`Bearer ${token}\` }`.
+- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, no `.json()`, no logic**. Paths have no leading `/` (`"api/courses"`). Token passed as `headers: this.authHeaders(accessToken)` from `BaseController`, never a hand-built `authorization` header.
 - _Schema_ (`tests/app/json-schemas/`): `z.strictObject`; a `// Response body of METHOD /api/...` comment; exported `type Xxx = z.infer<...>`; fields match the real response.
 - _Fixtures_ (`tests/fixtures.ts`): added only when a precondition repeats. A new controller comes as a pair, `xxxController` (on `api`, throws on non-2xx) and `rawXxxController` (on `request`). Preconditions wrapped in `base.step("precondition: ...", ...)`. The `Fixtures` type updated.
 

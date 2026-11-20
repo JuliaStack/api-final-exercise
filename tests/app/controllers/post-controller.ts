@@ -4,17 +4,13 @@ import { BaseController } from "./base-controller";
 export class PostController extends BaseController {
   async getPosts(accessToken?: string) {
     return this.request.get("api/posts", {
-      headers: accessToken
-        ? { authorization: `Bearer ${accessToken}` }
-        : undefined,
+      headers: this.authHeaders(accessToken),
     });
   }
 
   async createPost(accessToken: string | undefined, data: CreatePostData) {
     return this.request.post("api/posts", {
-      headers: accessToken
-        ? { authorization: `Bearer ${accessToken}` }
-        : undefined,
+      headers: this.authHeaders(accessToken),
       data,
     });
   }
@@ -25,18 +21,14 @@ export class PostController extends BaseController {
     data: UpdatePostData,
   ) {
     return this.request.patch(`api/posts/${id}`, {
-      headers: accessToken
-        ? { authorization: `Bearer ${accessToken}` }
-        : undefined,
+      headers: this.authHeaders(accessToken),
       data,
     });
   }
 
   async deletePost(id: string, accessToken: string | undefined) {
     return this.request.delete(`api/posts/${id}`, {
-      headers: accessToken
-        ? { authorization: `Bearer ${accessToken}` }
-        : undefined,
+      headers: this.authHeaders(accessToken),
     });
   }
 }
