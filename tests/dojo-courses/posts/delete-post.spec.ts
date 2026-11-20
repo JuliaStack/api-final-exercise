@@ -1,6 +1,9 @@
 import type { Post } from "../../app/json-schemas/post";
 import { nonAdminDeletePostCallers } from "../../app/test-data/invalid-post-data";
-import { buildPostData } from "../../app/test-data/post-data";
+import {
+  buildPostData,
+  nonExistingPostId,
+} from "../../app/test-data/post-data";
 import type { CreatedPost } from "../../app/types/post";
 import { expect, test } from "../../fixtures";
 
@@ -77,4 +80,30 @@ test.describe("delete post - negative scenarios", () => {
       },
     );
   }
+
+  test.fail(
+    "API-114: admin deleting a non-existing post - should return 404",
+    {
+      tag: "@regression",
+      annotation: {
+        type: "known bug",
+        description:
+          "the route calls prisma.post.delete without a lookup and returns 500 for a missing id",
+      },
+    },
+    async ({ rawPostController, adminToken }) => {
+      const response =
+        await test.step("admin deletes a non-existing post", () =>
+          rawPostController.deletePost(nonExistingPostId, adminToken));
+
+      await test.step("status code matches 404", () => {
+        expect(response.status()).toBe(404);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Post not found");
+      });
+    },
+  );
 });

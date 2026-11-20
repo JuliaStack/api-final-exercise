@@ -13,3 +13,5 @@ export function buildPostData(
     ...overrides,
   };
 }
+
+export const nonExistingPostId = "cnonexistingpost000000000";
