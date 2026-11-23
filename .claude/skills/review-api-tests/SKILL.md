@@ -9,29 +9,25 @@ effort: high
 
 Review tests the way the project's author would: does each new or changed test follow the suite's patterns, protect a real business risk, and look like it was written by the same person as its neighbours?
 
-This skill **only reviews**: it never edits `tests/`, stages or commits. Besides the chat reply, its only output is a review file `docs/<slug>/review.md` (step 5). The user decides what to fix.
+This skill **only reviews**: it never edits `tests/`, stages or commits. Besides the chat reply, its only output is `docs/<slug>/review.md` (step 5). The user decides what to fix.
 
 Sources, in priority order:
 
-1. **What must be tested**: the approved plan `docs/<slug>/plan.md` (if there is one) and the scenarios or notes the user gave. The tests under review must implement them; the tests themselves are never evidence of what was intended.
-2. **How tests are written**: `create-api-tests`. The checklist below is a condensed copy; if a rule is unclear or the two disagree, read `.claude/skills/create-api-tests/SKILL.md`.
-3. **Style reference**: the existing committed tests in `tests/` around the change. On style they win over the author's notes in `docs/*.md` (which may lag), but never over 1 or 2.
+1. **What must be tested**: the approved plan `docs/<slug>/plan.md` (if any) and the user's scenarios/notes. The tests must implement them; the tests themselves are never evidence of intent.
+2. **How tests are written**: `create-api-tests`. The checklist below is a condensed copy; if a rule is unclear or they disagree, read `.claude/skills/create-api-tests/SKILL.md`.
+3. **Style reference**: committed tests in `tests/` around the change. On style they win over `docs/*.md` notes (which may lag), but never over 1 or 2.
 
-The changed code is what's under review, not a source of truth.
+## Honesty and completeness (every step)
 
-## Honesty and completeness (applies to every step)
+The user relies on the review instead of re-reading the code, so a silent omission is worse than a wrong finding.
 
-The review must be honest and complete. The user relies on it instead of re-reading the code, so a silent omission is worse than a wrong finding.
+- **Report everything you notice**, nits included, as a finding with a severity. Never drop an observation because it is small, "probably fine", or the work looks good overall. A remark in a "Looks good" line or a check comment is not a finding.
+- **A sibling doing the same thing is no defence.** If new code repeats a flaw of an older test, report it and name the sibling; the user decides whether to keep it for consistency.
+- **Unsure is reportable**: mark it `unsure` with what you checked and what is unclear.
+- **Don't soften the verdict.** `Ready to commit` means zero findings of any severity.
+- **Say what you did not check** (tests not run, file skipped, status not verified against the route). Never claim a check you didn't make: "matches the route code" is true only if you opened the route and compared each status and message.
 
-- **Report everything you notice.** Every deviation from the plan, the route code, `create-api-tests` or the neighbouring tests becomes a finding with a severity, nits included. Never drop an observation because it is small, because it is "probably fine", or because the work looks good overall.
-- **Never mention a problem in passing and then leave it out of the findings.** If while reviewing you think "this differs from X" or "this is redundant", it goes into the report as a finding. A remark in a "Looks good" line or a mechanical-check comment doesn't count.
-- **A sibling doing the same thing is not a defence.** If the new code repeats a flaw that exists in an older test, report it anyway as a finding (name the sibling, say it's the same there). The user decides whether to keep it for consistency; you don't decide for them.
-- **Unsure is still reportable.** If you can't tell whether something is a problem, report it marked `unsure` with what you checked and what is unclear. Don't silently skip it.
-- **Don't soften the verdict.** `Ready to commit` means you found nothing at all, of any severity. If you found anything, even a nit, the verdict is `Ready after nits` and the file is written.
-- **Say what you did not check.** If you didn't run the tests, skipped a file, or could not verify an expected status against the route, list that explicitly; don't let the reader assume it was covered.
-- **Never claim a check you didn't make.** "Matches the route code" is only true if you opened the route and compared each status and message.
-
-## Scope: what to review
+## Scope
 
 1. **Paths given by the user** → review exactly those.
 2. **Otherwise the uncommitted work under `tests/`:**
@@ -39,24 +35,23 @@ The review must be honest and complete. The user relies on it instead of re-read
    git status --short tests
    git diff HEAD -- tests
    ```
-   Untracked files don't show in `git diff`; read them in full. If nothing is changed under `tests/`, say so and stop.
-3. Review **only changed lines**. Untouched code is not a finding, even if it breaks a rule; mention it under "Pre-existing, not part of this change" only if it directly affects the new code (e.g. the new case copies a legacy pattern).
+   Untracked files don't show in `git diff`; read them in full. Nothing changed → say so and stop.
+3. Review **only changed lines**. Untouched code is not a finding; mention it under "Pre-existing, not part of this change" only if it directly affects the new code (e.g. the new case copies a legacy pattern).
 
 ## Workflow
 
 ### 1. Build context (don't skip)
 
-- If `docs/<slug>/plan.md` exists (or a plan path was given), read it first: the planned scenarios, their expected results, and what is under **Not planned**.
-- Read each changed file in full, then its **siblings in the same layer** (other specs, other `test-data/` files, the controller, the schema file, `tests/fixtures.ts`). Consistency can only be judged against them.
-- Treat `tests/dojo-courses/users/` as the reference for ideal coverage and style: its specs plus the fixtures, controller, test-data, types and schemas they use.
-- For every spec under review, open the route it hits in `src/app/api/...` (and `src/lib/validations/`) to check that expected statuses and error fields match what the code really returns. Compare **each** expected status and error message with the code, not a sample.
-- Check the tests against **three kinds of reference**, and say in the report which ones you used:
-  1. **The given docs**: the plan, the user's notes, `create-api-tests`, and (when relevant) `src/app/api/docs/openapi.json` and the Prisma schema. Every planned scenario must map to a test; nothing from **Not planned** may appear.
-  2. **The existing code**: the route handler, its validation schema, `src/lib/auth.ts`, `src/proxy.ts`. Expected results come from here, never from guessing.
-  3. **The tests nearby**: for every new test, find the closest existing test (same domain, or the same kind of scenario in another domain) and compare it with the new one side by side: fixtures requested, steps, step wording, assertions, case-array shape, helpers used. Every difference is a finding unless the plan or the route code requires it.
-- Then do a **line-by-line pass** over every changed test body and every changed helper. For each fixture or parameter in the test's arguments, find where it is used. For each statement, ask whether it is needed. See "Test body hygiene" in the checklist.
+- Read `docs/<slug>/plan.md` first if it exists: planned scenarios, expected results, **Not planned**.
+- Read each changed file in full, then its **siblings in the same layer** (specs, `test-data/`, controller, schema, `tests/fixtures.ts`). Treat `tests/dojo-courses/users/` (specs plus the fixtures, controller, test-data, types, schemas they use) as the reference for ideal coverage and style.
+- For every spec, open the route in `src/app/api/...` (and `src/lib/validations/`) and compare **each** expected status and error message with what the code returns, not a sample.
+- Check against **three references** and say in the report which you used:
+  1. **Given docs**: plan, user notes, `create-api-tests`, and when relevant `src/app/api/docs/openapi.json` and the Prisma schema. Every planned scenario maps to a test; nothing from **Not planned** appears.
+  2. **Existing code**: route handler, its validation schema, `src/lib/auth.ts`, `src/proxy.ts`. Expected results come from here, never from guessing.
+  3. **Nearby tests**: for each new test find the closest existing one (same domain, or same kind of scenario elsewhere) and compare side by side: fixtures, steps, step wording, assertions, case-array shape, helpers. Every difference is a finding unless the plan or route requires it.
+- Then a **line-by-line pass** over every changed test body and helper: find where each fixture/parameter is used and ask whether each statement is needed (see "Test body hygiene").
 
-### 2. Run the mechanical checks
+### 2. Mechanical checks
 
 ```bash
 npx tsc --noEmit
@@ -64,96 +59,91 @@ npx prettier --check tests
 grep -rhoE "API-[0-9]+" tests | sort | uniq -d     # duplicate test ids: must print nothing
 ```
 
-If the user asks, or the change is small, also run the changed specs (`BASE_URL=http://localhost:3000/ npx playwright test <file>` for a local server; the default `BASE_URL` is a remote training server). If tests were not run, say so; never claim they pass.
+If the user asks, or the change is small, also run the changed specs (`BASE_URL=http://localhost:3000/ npx playwright test <file>`; the default `BASE_URL` is a remote server). If tests were not run, say so; never claim they pass.
 
 ### 3. Review against the checklist
 
-**Layers** (each depends only on the ones below it; only what's needed was added):
+**Layers** (each depends only on the ones below; only what's needed was added):
 
-- _Types_ (`tests/app/types/`): a base `XxxFields` type, derived via `Pick` / `Partial`; no `any`; no duplicated shapes.
-- _Data_ (`tests/app/test-data/<domain>-data.ts`): `buildXxxData()` builders with faker; uniqueness via `getRandomNumber()`; secrets and credentials from `process.env`, never hardcoded.
-- _Negative cases_ (`invalid-<flow>-data.ts`): array of `{ id, title, overrides | buildPayload, ... }` with a unique `API-NNN` id. New cases use `overrides` or `buildPayload: () => ...`, **not** a ready-made `payload` computed at import time.
-- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, no `.json()`, no logic**. Paths have no leading `/` (`"api/courses"`). Token passed as `headers: this.authHeaders(accessToken)` from `BaseController`, never a hand-built `authorization` header.
+- _Types_ (`tests/app/types/`): base `XxxFields` type, derived via `Pick` / `Partial`; no `any`; no duplicated shapes.
+- _Data_ (`tests/app/test-data/<domain>-data.ts`): `buildXxxData()` builders with faker; uniqueness via `getRandomNumber()`; secrets from `process.env`, never hardcoded.
+- _Negative cases_ (`invalid-<flow>-data.ts`): array of `{ id, title, overrides | buildPayload, ... }` with a unique `API-NNN` id. New cases use `overrides` or `buildPayload: () => ...`, **not** a `payload` computed at import time.
+- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, `.json()` or logic**. Paths without leading `/`. Token via `headers: this.authHeaders(accessToken)`, never a hand-built `authorization` header.
 - _Schema_ (`tests/app/json-schemas/`): `z.strictObject`; a `// Response body of METHOD /api/...` comment; exported `type Xxx = z.infer<...>`; fields match the real response.
-- _Fixtures_ (`tests/fixtures.ts`): added only when a precondition repeats. A new controller comes as a pair, `xxxController` (on `api`, throws on non-2xx) and `rawXxxController` (on `request`). Preconditions wrapped in `base.step("precondition: ...", ...)`. The `Fixtures` type updated.
+- _Fixtures_ (`tests/fixtures.ts`): added only when a precondition repeats. A new controller comes as a pair: `xxxController` (on `api`, throws on non-2xx) and `rawXxxController` (on `request`). Preconditions in `base.step("precondition: ...", ...)`. `Fixtures` type updated.
 
 **Spec structure:**
 
-- `test` / `expect` imported **only** from `../fixtures`, never from `@playwright/test`.
-- Describes: `test.describe("<flow>", ...)` for positive, `test.describe("<flow> - negative scenarios", ...)` for negative; **no tags on describes**. Every `test(...)` has its own tag as the 2nd argument: `{ tag: "@regression" }`, plus `@smoke` only for the main happy path of a resource (`{ tag: ["@regression", "@smoke"] }`); negatives and secondary flows are `@regression` only.
-- Titles: `API-NNN: <subject> - should <expectation>`; in a loop `` `${id}: ${title} - should return ${status}` ``. Ids unique and following on from the current highest id. **Ids are stable:** a gap in the sequence is fine and is not a finding. An id of an existing (committed) test that was changed, shifted or reused for another test is a blocker; check with `git diff HEAD -- tests | grep -E "^[-+].*API-[0-9]+"` that no existing id changed. When a test was deleted, its id must not reappear.
+- `test` / `expect` imported **only** from `../fixtures`, never `@playwright/test`.
+- Describes: `test.describe("<flow>", ...)` positive, `test.describe("<flow> - negative scenarios", ...)` negative; **no tags on describes**. Every `test(...)` has its own tag as 2nd argument: `{ tag: "@regression" }`, plus `@smoke` only for a resource's main happy path (`{ tag: ["@regression", "@smoke"] }`); negatives and secondary flows are `@regression` only.
+- Titles: `API-NNN: <subject> - should <expectation>`; in a loop `` `${id}: ${title} - should return ${status}` ``. Ids unique, continuing from the current highest. **Ids are stable:** gaps are fine; an existing (committed) id that was changed, shifted or reused is a blocker (check `git diff HEAD -- tests | grep -E "^[-+].*API-[0-9]+"`); a deleted test's id must not reappear.
 - Everything inside `test.step(...)`; order request → status (if relevant) → schema → values.
 - **Arrange → Act → Assert**:
-  - Arrange: fixtures/builders/setup; setup steps prefixed `precondition:`; request data built here, not inside the Act step; no assertions.
+  - Arrange: fixtures/builders/setup; setup steps prefixed `precondition:`; request data built here, not in the Act step; no assertions.
   - Act: exactly **one** `test.step` with the request under test.
-  - Assert: separate `test.step`s, one check each; no new requests between Act and Assert except a follow-up read that verifies a state change persisted.
+  - Assert: separate `test.step`s, one check each; no new requests between Act and Assert except a follow-up read verifying a persisted change.
   - No `// Arrange` / `// Act` / `// Assert` comments.
-- Schema check written exactly as `const result = xxxSchema.safeParse(json); expect(result.error?.issues ?? []).toEqual([]);`.
-- Schema check: once per endpoint, in the `@smoke` test. Exception: an endpoint that has different schemas (e.g. `courseDetailSchema` after `courseSchema`).
-- Value checks on one object: **more than 2** fields of the same body compared with expected values must be **one** step with one `expect(json).toMatchObject({ ... })` (expected values built once and reused for the response and the follow-up GET), not a row of `expect(json.field).toBe(...)` lines. One or two field checks may stay plain `toBe` / `toContain`; don't flag them. `expect.soft` is not used. A row of 3 or more per-field `toBe` checks is a nit.
+- Schema check exactly as `const result = xxxSchema.safeParse(json); expect(result.error?.issues ?? []).toEqual([]);`, once per endpoint in the `@smoke` test (unless the endpoint has different schemas, e.g. `courseDetailSchema` after `courseSchema`).
+- Value checks: **more than 2** fields of one body compared with expected values → **one** step with one `expect(json).toMatchObject({ ... })` (expected values built once, reused for response and follow-up GET). One or two fields may stay plain `toBe` / `toContain`. No `expect.soft`. A row of 3+ per-field `toBe` is a nit.
 - `xxxController` for Arrange and happy paths; `rawXxxController` for the request under test in negatives.
 - Negatives: a `for` loop over an array from `test-data/`; a single case with its own precondition (like `API-008`) is a standalone test in the same describe. Each asserts the status **and** the error field the route returns (`error`, `error_description`).
-- Status checks: `xxxController` already throws on non-2xx, so in positives a `status code matches 200` step is redundant (flag it), while any other success status (e.g. `201`) **must** be asserted. **Every** negative must have a `status code matches ${status}` step.
-- Tests are independent: each creates its own data; no reliance on seed data except `adminCredentials`; no ordering between tests.
+- Status checks: `xxxController` throws on non-2xx, so `status code matches 200` in positives is redundant (flag it); any other success status (e.g. `201`) **must** be asserted. **Every** negative needs a `status code matches ${status}` step.
+- Tests are independent: each creates its own data; no seed data except `adminCredentials`; no ordering.
 
-**Test value** (the "why does this test exist" check):
+**Test value** ("why does this test exist"):
 
-- Each test catches a real business risk (main flow → access control → money/data/access rules). If you can't name the risk, flag it.
+- Each test catches a real business risk (main flow → access control → money/data/access rules). Can't name the risk → flag.
 - No duplicates of existing tests (grep `tests/dojo-courses/` for the route/controller method); no second case from an already covered equivalence class.
-- No separate checks for fields the Zod schema already guarantees; assert only values that depend on the request.
-- No tests of framework/library behavior (Next.js, Prisma, Zod internals).
-- No status-only test where the outcome matters (a change must persist: verify with a follow-up GET, like `update-user.spec.ts`).
-- **No unrequested edge cases** (missing keys, exotic formats, boundaries, unicode, oversized bodies). Flag them; the user must have asked for them explicitly.
-- With a plan: every planned scenario has a test that checks what the plan expects; nothing from **Not planned** was written. A missing scenario or an expected result that contradicts the plan is a blocker.
-- Expected statuses and messages match the plan and the route code, not a guess. If the plan and the route disagree, report it as a finding for the user to decide; don't side with either.
+- No checks for fields the Zod schema already guarantees; assert only request-dependent values.
+- No tests of framework/library behavior (Next.js, Prisma, Zod).
+- No status-only test where the outcome matters (a change must persist: follow-up GET, like `update-user.spec.ts`).
+- **No unrequested edge cases** (missing keys, exotic formats, boundaries, unicode, oversized bodies): flag them; the user must have asked.
+- With a plan: every planned scenario has a test checking what the plan expects; nothing from **Not planned**. A missing scenario or contradicting expected result is a blocker.
+- Statuses and messages match the plan and route code, not a guess. If plan and route disagree, report it for the user to decide; don't side with either.
 
-**Test body hygiene** (the line-by-line pass; each item is a finding when it fails):
+**Test body hygiene** (line-by-line pass; each failure is a finding):
 
-- Every fixture in a test's arguments is needed by **every** case that runs through that test. A fixture requested only for some cases of a loop (e.g. `userToken` for a case that sends no token, which also registers an extra user per run) is a finding; the fix is to split the case out or to remove the fixture.
-- No no-op or redundant code: a filter or condition that can't change the result (e.g. filtering a list of a fresh course by a code that is already unique), a variable used once that only renames another one, a step that repeats the previous one.
-- Assertions are as strict as the claim in the title or step name. "Is kept unchanged" must compare the whole object, "is not created" must check the whole list, and a persistence claim must be backed by a follow-up read. Flag a weaker assertion, and flag a title that promises more than the test checks.
-- Test data can't make the test flaky or wrong over time (fixed dates, values that may collide between runs or workers, values that depend on the clock within a tiny margin).
-- Setup is done through the cheapest existing way (fixtures and builders), not by repeating requests in the test body.
-- A scenario's claimed risk is really covered. If the plan says "schema OK" or "nothing was created" for a scenario and the test doesn't check it, that is a finding (or a documented deviation, if the skill's rules say so: name it).
+- Every fixture in a test's arguments is needed by **every** case of that test. A fixture used by only some loop cases (e.g. `userToken` for a case sending no token, which also registers an extra user per run) is a finding: split the case out or drop the fixture.
+- No no-op/redundant code: a filter that can't change the result, a variable used once that only renames another, a step repeating the previous one.
+- Assertions are as strict as the title/step claims. "Kept unchanged" compares the whole object, "is not created" checks the whole list, persistence needs a follow-up read. Flag a weaker assertion or a title promising more than is checked.
+- Data can't make the test flaky over time (fixed dates, values colliding between runs/workers, tight clock margins).
+- Setup uses the cheapest existing way (fixtures, builders), not repeated requests in the body.
+- The claimed risk is really covered: if the plan says "schema OK" or "nothing was created" and the test doesn't check it, that is a finding (or a documented deviation: name it).
 
-**Hygiene:** no `test.only` / `test.skip` / `test.fixme` left in; no `console.log`, `waitForTimeout`, or commented-out code; no hardcoded URLs, emails or passwords; no `!` non-null assertions or `any` to silence the compiler; no unused imports/exports.
+**Hygiene:** no `test.only` / `skip` / `fixme`; no `console.log`, `waitForTimeout`, commented-out code; no hardcoded URLs, emails, passwords; no `!` or `any` to silence the compiler; no unused imports/exports.
 
-### 4. Consistency pass (across the project)
+### 4. Consistency pass
 
-Compare the change with its siblings and flag every place where it introduces something new instead of copying what exists:
+Flag every place where the change introduces something new instead of copying what exists:
 
-- names: files (`kebab-case`, `<domain>-data.ts`, `invalid-<flow>-data.ts`), exports, fixtures, case-array names, controller methods (verb + noun like `registerUser`, `getToken`);
-- structure: describe/tag layout, title format, step wording (`status code matches 400`, `response body matches the ... schema`, `response contains an error message`), case-object keys and their order;
-- layering: logic on the wrong layer (data in the spec instead of a builder, a repeated precondition not turned into a fixture, a repeated request not in a controller);
-- new helpers, libraries, or patterns where an existing one already covers the task.
+- names: files (`kebab-case`, `<domain>-data.ts`, `invalid-<flow>-data.ts`), exports, fixtures, case-array names, controller methods (verb + noun, e.g. `registerUser`);
+- structure: describe/tag layout, title format, step wording (`status code matches 400`, `response body matches the ... schema`, `response contains an error message`), case-object keys and order;
+- layering: data in the spec instead of a builder, a repeated precondition not a fixture, a repeated request not in a controller;
+- new helpers, libraries or patterns where an existing one covers the task.
 
-When a new file or test is the **second** of its kind and differs from the first, say which one should change and why; don't just write "inconsistent".
+When a new file/test is the **second** of its kind and differs from the first, say which should change and why; not just "inconsistent". When new code **copies** a flawed sibling, don't accept it as "consistent": report it on the new code and name the sibling, so the user can fix both or keep the pattern.
 
-When the new code **copies** a sibling that has a flaw, do not accept it as "consistent". Report it as a finding on the new code and name the sibling that has the same flaw, so the user can choose between fixing both and keeping the pattern.
-
-### 5. Decide the verdict and write the outcome
+### 5. Verdict and outcome
 
 Severity:
 
-- **Blocker**: fix before committing. A wrong or false-passing test (wrong expected status, an assertion that can't fail, a request in the wrong controller), `tsc`/`prettier` errors, duplicate ids, a renumbered or reused id of an existing test, `test.only`, hardcoded secrets, import from `@playwright/test`, tests that depend on each other or on seed data, more than one request in the Act step.
-- **Should fix**: breaks a project convention or weakens the test (assertions in a controller, import-time `payload`, missing `precondition:` prefix, missing tags, schema not `strictObject`, a duplicate schema check, status-only where persistence matters, missing error-field check in a negative, a missing status check in a negative or in a positive with a non-200 success status, a redundant `status code matches 200` step, a duplicate or low-value test, an unrequested edge case).
-- **Nit**: harmless but inconsistent style and naming (step wording, title phrasing, ordering, 3 or more per-field `toBe` checks instead of one `toMatchObject`).
+- **Blocker**: fix before commit. A wrong or false-passing test (wrong expected status, assertion that can't fail, request in the wrong controller), `tsc`/`prettier` errors, duplicate ids, renumbered/reused id of an existing test, `test.only`, hardcoded secrets, import from `@playwright/test`, tests depending on each other or on seed data, more than one request in Act.
+- **Should fix**: breaks a convention or weakens the test (assertions in a controller, import-time `payload`, missing `precondition:` prefix or tags, schema not `strictObject`, duplicate schema check, status-only where persistence matters, missing error-field check in a negative, missing status check in a negative or non-200 positive, redundant `status code matches 200`, duplicate or low-value test, unrequested edge case).
+- **Nit**: harmless style/naming inconsistency (step wording, title phrasing, ordering, 3+ per-field `toBe` instead of `toMatchObject`).
 
-Padding means findings with no evidence. A small finding that you can tie to a rule above, to the plan, to the route code or to a concrete sibling file is **not** padding and must be reported. A finding you can't tie to any of those is reported only as `unsure`, with what is unclear. Don't suggest new abstractions; prefer the lightest fix that brings the code in line with the existing pattern.
+A finding you can tie to a rule above, the plan, the route code or a concrete sibling is **not** padding and must be reported; one you can't tie to any is reported only as `unsure`. Don't suggest new abstractions; prefer the lightest fix that matches the existing pattern.
 
-Verdict, one of:
-
-| Verdict                  | When                                                        | Outcome                              |
-| ------------------------ | ----------------------------------------------------------- | ------------------------------------ |
+| Verdict                  | When                                                          | Outcome                              |
+| ------------------------ | ------------------------------------------------------------- | ------------------------------------ |
 | `Ready to commit`        | **zero findings of any severity**, nits and `unsure` included | chat reply only; **no file written** |
-| `Ready after nits`       | only Nit or Should-fix findings (the user may commit)       | write the review file                |
-| `Fix N blocker(s) first` | at least one Blocker (Should-fix items go in the same file) | write the review file                |
+| `Ready after nits`       | only Nit or Should-fix findings (the user may commit)         | write the review file                |
+| `Fix N blocker(s) first` | at least one Blocker (Should-fix items go in the same file)   | write the review file                |
 
-**The review file** (for any verdict except `Ready to commit`):
+**The review file** (any verdict except `Ready to commit`):
 
-- Path: `docs/<slug>/review.md`, where `<slug>` is the endpoint's folder, shared with its `plan.md` and `pipeline.md`: `<method>-<resource-path>`, kebab-case, path params dropped (e.g. `docs/patch-admin-users/review.md`, next to `docs/patch-admin-users/plan.md`). Don't name the folder after the spec or the flow; reuse the existing folder. Create the directory if needed. `docs/` is gitignored: this is a working note.
-- If the file exists, it is the previous review of the same flow: read it, drop findings that are now fixed, and replace the file. Don't append.
-- Use exactly this structure, terse, one fix per checkbox:
+- Path: `docs/<slug>/review.md`, `<slug>` = the endpoint's folder shared with `plan.md` and `pipeline.md`: `<method>-<resource-path>`, kebab-case, path params dropped (e.g. `docs/patch-admin-users/review.md`). Reuse the existing folder, don't name it after the spec or flow; create it if needed. `docs/` is gitignored: a working note.
+- If the file exists, it is the previous review of the same flow: read it, drop fixed findings, replace the file. Don't append.
+- Exactly this structure, terse, one fix per checkbox:
 
 ````markdown
 ---
@@ -178,64 +168,33 @@ files:
 - [ ] **`tests/dojo-courses/<domain>/x.spec.ts:42`** — what is wrong.
       **Why:** the risk or the rule it breaks (name the sibling file it should match).
       **Fix:** the smallest change; a short snippet only if it isn't obvious.
-
-## Should fix
-
-- [ ] same shape as above
-
-## Nits
-
-- [ ] same shape as above
-
-## Consistency notes
-
-- Where the change diverges from sibling files, and which side should move.
-
-## Pre-existing, not part of this change
-
-- Only if it directly affects the new code; otherwise omit.
-
-## Not checked
-
-- Anything you did not verify (tests not run, a route branch you couldn't compare, a file you skipped) and why. Write "nothing" only if everything was checked.
-
-## Edge cases worth a thought
-
-- One line each, only if noticed. Not findings.
-
-## After fixing
-
-Re-run `tsc`, `prettier --check tests` and the changed spec, then ask for a re-review.
 ````
 
-Omit empty sections. Every item follows **file:line → what is wrong → why → fix**, never a bare snippet.
+Then, in the same shape (`- [ ]` items): `## Should fix`, `## Nits`. Then plain-bullet sections: `## Consistency notes` (where the change diverges from siblings, which side should move), `## Pre-existing, not part of this change` (only if it directly affects new code), `## Not checked` (what and why; "nothing" only if everything was checked), `## Edge cases worth a thought` (one line each, not findings), `## After fixing` (re-run `tsc`, `prettier --check tests` and the changed spec, then ask for a re-review). Omit empty sections. Every item follows **file:line → what is wrong → why → fix**, never a bare snippet.
 
 ## Reply to the user
 
-Reply in the user's language. Keep it short; the details live in the file.
+In the user's language, short; details live in the file.
 
 - **Verdict** in one line.
-- **Mechanical checks**: one line each for `tsc`, `prettier`, duplicate ids, and whether tests were run.
-- **References used**: which of the plan / route code / nearby tests you compared against, and which sibling tests you matched each new test with.
-- **Plan coverage** (when there is a plan): one line per planned scenario, `S-id → test ids → covered as planned / deviation (what)`. Every deviation, such as a check the plan lists but the test doesn't make, is also a finding.
-- If a file was written: its path, the counts (`N blockers, N should fix, N nits`), and **every** finding as a one-liner linked as `[name](path#Lline)`, nits included. Don't repeat the file's detail.
+- **Mechanical checks**: one line each for `tsc`, `prettier`, duplicate ids, tests run or not.
+- **References used**: which of plan / route code / nearby tests, and which sibling matched each new test.
+- **Plan coverage** (with a plan): one line per scenario, `S-id → test ids → covered as planned / deviation (what)`. Every deviation is also a finding.
+- If a file was written: its path, counts (`N blockers, N should fix, N nits`), and **every** finding as a one-liner linked `[name](path#Lline)`, nits included. Don't repeat the file's detail.
 - **Not checked**: what you did not verify.
-- **Edge cases noticed**: one line each, even for `Ready to commit`.
-- **Looks good**: one or two lines on what already follows the patterns. This line never replaces a finding.
-- `Ready to commit`: say so, that no file was written, and that you found nothing of any severity.
+- **Edge cases noticed** (one line each, even for `Ready to commit`) and **Looks good** (one or two lines; never replaces a finding).
+- `Ready to commit`: say so, that no file was written, and that nothing of any severity was found.
 
-Then offer to apply the fixes from the file; don't apply or commit unless the user says so. When committing, `.md` files go in a separate commit from everything else: CI ignores them (`paths-ignore: "**.md"`), so they must not ride along with test changes.
-
-This skill runs on **Opus with high effort**; the `orchestrate-api-tests` orchestrator passes `model: opus, effort: high`.
+Then offer to apply the fixes from the file; don't apply or commit unless asked. When committing, `.md` files go in a separate commit: CI ignores them (`paths-ignore: "**.md"`), so they must not ride along with test changes.
 
 ## Orchestrated mode
 
-Use this when the prompt says the stage is orchestrated by `orchestrate-api-tests`. Everything above still applies, except:
+When the prompt says the stage is orchestrated by `orchestrate-api-tests`, everything above applies except:
 
-- **Scope:** the files listed in the prompt count as "paths given by the user".
-- **Resume:** a resumed review starts over from step 1. An existing review file is the previous round's review; handle it as step 5 says: drop the fixed items and replace the file. Ticked `- [x]` items were applied by the fix stage; check that each fix is really in the code before dropping it.
-- **Reply:** instead of the reply to the user, end with the `STAGE_RESULT` block from the prompt.
+- **Scope:** files listed in the prompt count as "paths given by the user".
+- **Resume:** start over from step 1. An existing review file is the previous round's; handle it per step 5. Ticked `- [x]` items were applied by the fix stage: verify each fix is really in the code before dropping it.
+- **Reply:** instead of the user reply, end with the `STAGE_RESULT` block from the prompt.
   - `verdict`: the verdict.
   - `artifacts`: the review file path, or nothing for `Ready to commit`.
-  - `summary`: the mechanical-check results, the counts `N blockers, N should fix, N nits`, the plan coverage (`S-id → test ids`), every finding as a one-liner (blockers, should-fix **and** nits), what was not checked, and the edge cases noticed. The orchestrator relays this summary to the user, so anything left out of it is lost; keep it as long as it needs to be.
-  - Don't offer to apply the fixes; the orchestrator decides.
+  - `summary`: mechanical-check results, counts `N blockers, N should fix, N nits`, plan coverage (`S-id → test ids`), every finding as a one-liner (blockers, should-fix **and** nits), what was not checked, edge cases noticed. The orchestrator relays this to the user, so anything left out is lost; make it as long as it needs to be.
+  - Don't offer to apply fixes; the orchestrator decides.
