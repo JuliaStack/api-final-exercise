@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
@@ -26,10 +27,10 @@ import {
 import { buildPostData } from "./app/test-data/post-data";
 import { buildTagData } from "./app/test-data/tag-data";
 import {
-  adminCredentials,
   buildUserData,
   buildTokenRequestData,
 } from "./app/test-data/user-data";
+import { adminTokenFile } from "./app/utils";
 
 // Teardown: tries to delete every id, even when one deletion fails,
 // then fails the test if any deletion failed so leftovers are not hidden.
@@ -137,12 +138,12 @@ export const test = base.extend<Fixtures>({
     await use(userToken);
   },
 
-  adminToken: async ({ userController }, use) => {
-    const response = await base.step(
-      "precondition: get admin access token",
-      () => userController.getToken(buildTokenRequestData(adminCredentials)),
+  // The admin token is requested once in global setup and stored in a file.
+  adminToken: async ({}, use) => {
+    const adminToken = await base.step(
+      "precondition: read admin access token from file",
+      () => JSON.parse(readFileSync(adminTokenFile, "utf-8")).access_token,
     );
-    const { access_token: adminToken } = await response.json();
     await use(adminToken);
   },
 

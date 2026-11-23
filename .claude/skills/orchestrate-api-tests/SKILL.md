@@ -17,7 +17,7 @@ One pipeline is for **one method of one route**.
 | --------------- | ----------------------------- | ------------- | -------------- | ---------------------------------------------- | ----------------------------------------- |
 | plan (optional) | `plan-endpoint-tests`         | `opus`        | `high`         | endpoint + route file                          | `docs/<slug>/plan.md`                     |
 | create          | `create-api-tests`            | `sonnet`      | `high`         | plan file, or the endpoint if there is no plan | changed files under `tests/`              |
-| review          | `review-api-tests`            | `sonnet`      | `high`         | the files create changed                       | verdict (+ `docs/<slug>/review.md`)     |
+| review          | `review-api-tests`            | `sonnet`      | `high`         | the files create changed + plan file (if any)  | verdict (+ `docs/<slug>/review.md`)     |
 | fix-1, fix-2    | `create-api-tests` (fix mode) | `sonnet`      | `high`         | review file                                    | changed files under `tests/`              |
 
 The model and effort per stage are fixed by the user. Always pass them to the Agent tool, even when resuming.
@@ -92,7 +92,7 @@ Load the `<skill>` skill with the Skill tool and follow it, in its "Orchestrated
 Stage: <stage>
 Endpoint: <METHOD /api/path>   Route file: <route>
 State file: docs/<slug>/pipeline.md
-Input: <plan file path | "no plan, analyze the endpoint yourself" | files to review | review file to apply>
+Input: <plan file path | "no plan, analyze the endpoint yourself" | files to review + plan file path, or "no plan" | review file to apply>
 Resume: <no | yes: the previous attempt stopped at checkpoint "<checkpoint>"; files already written: <list>. These are your own unfinished work: continue from the first unfinished item, don't redo or overwrite finished work.>
 User notes: <scope, edge cases the user asked for, answers to earlier questions, or "none">
 
@@ -132,7 +132,7 @@ triage ──plan needed──▶ plan ──▶ GATE 1 ──▶ create ──�
 - **Gate 1, scenarios** (stop and wait for the user):
   - With a plan: show the plan file path, the scenarios as `S-id: title (risk)`, what was left out, and the open questions. Ask to confirm or adjust. Pass any adjustments to create in "User notes".
   - Without a plan: create runs its own discovery and returns `needs_user` with its scenario list; that question is Gate 1. Send the answer back with SendMessage.
-- **Create → review:** no stop. Report create's result in a few lines and start review straight away with create's `artifacts` as the files to review.
+- **Create → review:** no stop. Report create's result in a few lines and start review straight away with create's `artifacts` as the files to review, plus the plan file path if there is one.
 - **Fix loop** (automatic, up to 2 rounds, no stop):
   - Verdict `Ready to commit`: no fix loop. Mark `fix-1` and `fix-2` as `skipped`.
   - Verdict `Ready after nits` with **only nits** in the review file: no fix loop. Mark both fix rows `skipped`; the user can ask for the nits later.

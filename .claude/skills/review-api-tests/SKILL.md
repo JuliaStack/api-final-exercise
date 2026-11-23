@@ -11,7 +11,13 @@ Review tests the way the project's author would: does each new or changed test f
 
 This skill **only reviews**: it never edits `tests/`, stages or commits. Besides the chat reply, its only output is a review file `docs/<slug>/review.md` (step 5). The user decides what to fix.
 
-`create-api-tests` is the source of truth; the checklist below is a condensed copy. If a rule is unclear or the two disagree, read `.claude/skills/create-api-tests/SKILL.md`. Code in `tests/` wins over `docs/` (which may lag).
+Sources, in priority order:
+
+1. **What must be tested**: the approved plan `docs/<slug>/plan.md` (if there is one) and the scenarios or notes the user gave. The tests under review must implement them; the tests themselves are never evidence of what was intended.
+2. **How tests are written**: `create-api-tests`. The checklist below is a condensed copy; if a rule is unclear or the two disagree, read `.claude/skills/create-api-tests/SKILL.md`.
+3. **Style reference**: the existing committed tests in `tests/` around the change. On style they win over the author's notes in `docs/*.md` (which may lag), but never over 1 or 2.
+
+The changed code is what's under review, not a source of truth.
 
 ## Scope: what to review
 
@@ -28,6 +34,7 @@ This skill **only reviews**: it never edits `tests/`, stages or commits. Besides
 
 ### 1. Build context (don't skip)
 
+- If `docs/<slug>/plan.md` exists (or a plan path was given), read it first: the planned scenarios, their expected results, and what is under **Not planned**.
 - Read each changed file in full, then its **siblings in the same layer** (other specs, other `test-data/` files, the controller, the schema file, `tests/fixtures.ts`). Consistency can only be judged against them.
 - Treat `tests/dojo-courses/users/` as the reference for ideal coverage and style: its specs plus the fixtures, controller, test-data, types and schemas they use.
 - For every spec under review, open the route it hits in `src/app/api/...` (and `src/lib/validations/`) to check that expected statuses and error fields match what the code really returns.
@@ -80,7 +87,8 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
 - No tests of framework/library behavior (Next.js, Prisma, Zod internals).
 - No status-only test where the outcome matters (a change must persist: verify with a follow-up GET, like `update-user.spec.ts`).
 - **No unrequested edge cases** (missing keys, exotic formats, boundaries, unicode, oversized bodies). Flag them; the user must have asked for them explicitly.
-- Expected statuses and messages match the route code, not a guess.
+- With a plan: every planned scenario has a test that checks what the plan expects; nothing from **Not planned** was written. A missing scenario or an expected result that contradicts the plan is a blocker.
+- Expected statuses and messages match the plan and the route code, not a guess. If the plan and the route disagree, report it as a finding for the user to decide; don't side with either.
 
 **Hygiene:** no `test.only` / `test.skip` / `test.fixme` left in; no `console.log`, `waitForTimeout`, or commented-out code; no hardcoded URLs, emails or passwords; no `!` non-null assertions or `any` to silence the compiler; no unused imports/exports.
 
