@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
@@ -27,10 +28,11 @@ import {
 import { buildPostData } from "./app/test-data/post-data";
 import { buildTagData } from "./app/test-data/tag-data";
 import {
+  adminCredentials,
   buildUserData,
   buildTokenRequestData,
 } from "./app/test-data/user-data";
-import { adminTokenFile } from "./app/utils";
+import { adminTokenFile, isTokenExpired } from "./app/utils";
 
 // Teardown: tries to delete every id, even when one deletion fails,
 // then fails the test if any deletion failed so leftovers are not hidden.
@@ -83,6 +85,7 @@ type Fixtures = {
   // It is the same course as `draftCourse` and `courseWithChapters`.
   publishedCourse: PublishedCourse;
   purchaseController: PurchaseController;
+  rawPurchaseController: PurchaseController;
   // Creates a category as admin; every created category is deleted in teardown.
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
@@ -138,12 +141,35 @@ export const test = base.extend<Fixtures>({
     await use(userToken);
   },
 
-  // The admin token is requested once in global setup and stored in a file.
-  adminToken: async ({}, use) => {
-    const adminToken = await base.step(
-      "precondition: read admin access token from file",
-      () => JSON.parse(readFileSync(adminTokenFile, "utf-8")).access_token,
-    );
+  // The admin token is requested in global setup and stored in a file;
+  // it lives 15 minutes, so when it has expired (e.g. the IDE skipped global
+  // setup) a fresh one is requested and written back to the file.
+  adminToken: async ({ userController }, use) => {
+    let adminToken: string | undefined;
+    try {
+      adminToken = JSON.parse(
+        readFileSync(adminTokenFile, "utf-8"),
+      ).access_token;
+    } catch {
+      // missing or unreadable file: request a new token below
+    }
+    if (!adminToken || isTokenExpired(adminToken)) {
+      adminToken = await base.step(
+        "precondition: admin access token is missing or expired, request a new one",
+        async () => {
+          const response = await userController.getToken(
+            buildTokenRequestData(adminCredentials),
+          );
+          const { access_token } = await response.json();
+          // Write and rename, so parallel workers never read a half-written file.
+          mkdirSync(dirname(adminTokenFile), { recursive: true });
+          const tmpFile = `${adminTokenFile}.${process.pid}.tmp`;
+          writeFileSync(tmpFile, JSON.stringify({ access_token }));
+          renameSync(tmpFile, adminTokenFile);
+          return access_token as string;
+        },
+      );
+    }
     await use(adminToken);
   },
 
@@ -259,6 +285,10 @@ export const test = base.extend<Fixtures>({
 
   purchaseController: async ({ api }, use) => {
     await use(new PurchaseController(api));
+  },
+
+  rawPurchaseController: async ({ request }, use) => {
+    await use(new PurchaseController(request));
   },
 
   createCategory: async ({ categoryController, adminToken }, use) => {
