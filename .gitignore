@@ -48,3 +48,6 @@ playwright.env
 # TypeScript incremental build cache
 *.tsbuildinfo
 /docs/
+
+# Auth state written by Playwright global setup
+/.auth/
