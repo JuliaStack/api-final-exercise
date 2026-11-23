@@ -15,6 +15,10 @@ export type CreatePromoCodeData = Pick<
 > &
   Partial<Pick<PromoCodeFields, "maxUses">>;
 
+export type ValidatePromoCodeData = Pick<PromoCodeFields, "code">;
+
+export type CreatedPromoCode = Pick<PromoCodeFields, "id" | "code">;
+
 // One element of GET /api/admin/courses/{courseId}/promo-codes (only the fields the tests read).
 export type PromoCodeListItem = Pick<
   PromoCodeFields,

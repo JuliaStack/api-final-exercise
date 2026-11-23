@@ -14,3 +14,13 @@ export const promoCodeSchema = z.strictObject({
 });
 
 export type PromoCode = z.infer<typeof promoCodeSchema>;
+
+// Response body of POST /api/courses/{courseId}/validate-promo for an applicable code
+export const promoValidationSchema = z.strictObject({
+  valid: z.literal(true),
+  discountPercent: z.int(),
+  originalPrice: z.number(),
+  finalPrice: z.number(),
+});
+
+export type PromoValidation = z.infer<typeof promoValidationSchema>;

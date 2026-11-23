@@ -54,3 +54,28 @@ export const invalidPromoCodeData = [
     error: "Expiration date must be in the future",
   },
 ];
+
+// Callers rejected with 401 by POST /api/courses/{courseId}/validate-promo.
+// `token` is the Authorization token for the case (undefined = no header).
+export const unauthenticatedValidatePromoCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
+  {
+    id: "API-145",
+    title: "no token",
+    token: undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-146",
+    title: "expired token",
+    token: expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+];

@@ -31,6 +31,8 @@ export type UpdateCourseData = Partial<
   >
 >;
 
+export type PurchaseCourseData = { promoCode?: string };
+
 export type CreatedCourse = Pick<CourseFields, "id" | "title" | "slug">;
 
 export type CourseListQuery = {

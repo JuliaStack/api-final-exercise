@@ -2,9 +2,11 @@ import type {
   CourseListQuery,
   CreateChapterData,
   CreateCourseData,
+  PurchaseCourseData,
   UpdateChapterData,
   UpdateCourseData,
 } from "../types/course";
+import type { ValidatePromoCodeData } from "../types/promo-code";
 import { BaseController } from "./base-controller";
 
 export class CourseController extends BaseController {
@@ -46,10 +48,26 @@ export class CourseController extends BaseController {
   }
 
   // The route reads the body with `req.json()`, so a body is always sent (no body → 500).
-  async purchaseCourse(id: string, accessToken: string | undefined) {
+  async purchaseCourse(
+    id: string,
+    accessToken: string | undefined,
+    data: PurchaseCourseData = {},
+  ) {
     return this.request.post(`api/courses/${id}/purchase`, {
       headers: this.authHeaders(accessToken),
-      data: {},
+      data,
+    });
+  }
+
+  // The route reads the body with `req.json()`, so a body is always sent (no body → 500).
+  async validatePromoCode(
+    id: string,
+    accessToken: string | undefined,
+    data: ValidatePromoCodeData,
+  ) {
+    return this.request.post(`api/courses/${id}/validate-promo`, {
+      headers: this.authHeaders(accessToken),
+      data,
     });
   }
 

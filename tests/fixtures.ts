@@ -17,6 +17,10 @@ import type {
   PublishedCourse,
 } from "./app/types/course";
 import type { CreatedPost, CreatePostData } from "./app/types/post";
+import type {
+  CreatedPromoCode,
+  CreatePromoCodeData,
+} from "./app/types/promo-code";
 import type { CreatedTag, CreateTagData } from "./app/types/tag";
 import type { CreatedUser } from "./app/types/user";
 import {
@@ -27,6 +31,7 @@ import {
   purchasableCoursePrice,
 } from "./app/test-data/course-data";
 import { buildPostData } from "./app/test-data/post-data";
+import { buildPromoCodeData } from "./app/test-data/promo-code-data";
 import { buildTagData } from "./app/test-data/tag-data";
 import {
   adminCredentials,
@@ -57,7 +62,7 @@ async function deleteEach(
   }
 }
 
-type Fixtures = {
+export type Fixtures = {
   // Request context that throws on any non-2xx/3xx response.
   // Use it for Arrange steps and happy paths; use the default `request`
   // fixture for the request under test in negative scenarios.
@@ -105,6 +110,11 @@ type Fixtures = {
   createPost: (overrides?: Partial<CreatePostData>) => Promise<CreatedPost>;
   promoCodeController: PromoCodeController;
   rawPromoCodeController: PromoCodeController;
+  // Creates a promo code as admin; it goes away with its course (cascade), so there is no teardown.
+  createPromoCode: (
+    courseId: string,
+    overrides?: Partial<CreatePromoCodeData>,
+  ) => Promise<CreatedPromoCode>;
 };
 
 export const test = base.extend<Fixtures>({
@@ -378,6 +388,22 @@ export const test = base.extend<Fixtures>({
 
   rawPromoCodeController: async ({ request }, use) => {
     await use(new PromoCodeController(request));
+  },
+
+  createPromoCode: async ({ promoCodeController, adminToken }, use) => {
+    await use(async (courseId, overrides) => {
+      const response = await base.step(
+        "precondition: admin creates a promo code",
+        () =>
+          promoCodeController.createPromoCode(
+            courseId,
+            adminToken,
+            buildPromoCodeData(overrides),
+          ),
+      );
+      const { id, code } = await response.json();
+      return { id, code };
+    });
   },
 });
 

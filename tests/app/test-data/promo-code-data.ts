@@ -13,3 +13,6 @@ export function buildPromoCodeData(
     ...overrides,
   };
 }
+
+// Well-formed code that buildPromoCodeData never generates, so it never exists.
+export const nonExistingPromoCode = "NO-SUCH-CODE";
