@@ -3,8 +3,11 @@ import type { APIRequestContext } from "@playwright/test";
 export class BaseController {
   constructor(protected readonly request: APIRequestContext) {}
 
-  // Authorization header for the request; no header when there is no token.
+  // Authorization header for the request; no header only when the token is
+  // undefined (an empty string is still sent, as `Bearer `).
   protected authHeaders(accessToken?: string) {
-    return accessToken ? { authorization: `Bearer ${accessToken}` } : undefined;
+    return accessToken === undefined
+      ? undefined
+      : { authorization: `Bearer ${accessToken}` };
   }
 }

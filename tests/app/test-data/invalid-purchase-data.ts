@@ -18,3 +18,30 @@ export const unauthenticatedPurchaseCallers = [
     error: "Unauthorized",
   },
 ];
+
+// Callers that must not read purchases with GET /api/purchases.
+// `getToken` picks the Authorization token for the case
+// (undefined = no header, "" = header `Bearer ` without a token).
+export const unauthenticatedPurchasesListCallers = [
+  {
+    id: "API-126",
+    title: "anonymous user",
+    getToken: (): string | undefined => undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-127",
+    title: "empty token",
+    getToken: (): string | undefined => "",
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-128",
+    title: "expired token",
+    getToken: (): string | undefined => expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+];
