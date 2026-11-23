@@ -1,6 +1,9 @@
-import { purchaseSchema } from "../../app/json-schemas/purchase";
+import {
+  purchaseSchema,
+  type Purchase,
+  type PurchaseList,
+} from "../../app/json-schemas/purchase";
 import { unauthenticatedPurchaseCallers } from "../../app/test-data/invalid-purchase-data";
-import type { PurchaseListItem } from "../../app/types/purchase";
 import { expect, test } from "../../fixtures";
 
 test.describe("purchase course", () => {
@@ -21,7 +24,7 @@ test.describe("purchase course", () => {
         expect(response.status()).toBe(201);
       });
 
-      const json = await response.json();
+      const json: Purchase = await response.json();
 
       await test.step("response body matches the purchase schema", () => {
         const result = purchaseSchema.safeParse(json);
@@ -29,10 +32,10 @@ test.describe("purchase course", () => {
       });
 
       await test.step("purchase belongs to the user and is charged the course price", () => {
-        expect({ ...json, amount: Number(json.amount) }).toMatchObject({
+        expect(json).toMatchObject({
           courseId: publishedCourse.id,
           userId: registeredUser.id,
-          amount: publishedCourse.price,
+          amount: String(publishedCourse.price),
           promoCode: null,
         });
       });
@@ -41,13 +44,10 @@ test.describe("purchase course", () => {
         await test.step("user requests their purchases", () =>
           purchaseController.getPurchases(userToken));
 
-      const purchases: PurchaseListItem[] = await purchasesResponse.json();
+      const purchases: PurchaseList = await purchasesResponse.json();
 
       await test.step("purchase is listed once", () => {
-        const ids = purchases
-          .filter(({ courseId }) => courseId === publishedCourse.id)
-          .map(({ id }) => id);
-        expect(ids).toEqual([json.id]);
+        expect(purchases.map(({ id }) => id)).toEqual([json.id]);
       });
     },
   );
@@ -83,12 +83,10 @@ test.describe("purchase course - negative scenarios", () => {
         await test.step("user requests their purchases", () =>
           purchaseController.getPurchases(userToken));
 
-      const purchases: PurchaseListItem[] = await purchasesResponse.json();
+      const purchases: PurchaseList = await purchasesResponse.json();
 
       await test.step("course is still purchased once", () => {
-        expect(
-          purchases.filter(({ courseId }) => courseId === publishedCourse.id),
-        ).toHaveLength(1);
+        expect(purchases).toHaveLength(1);
       });
     },
   );
@@ -118,12 +116,10 @@ test.describe("purchase course - negative scenarios", () => {
         await test.step("user requests their purchases", () =>
           purchaseController.getPurchases(userToken));
 
-      const purchases: PurchaseListItem[] = await purchasesResponse.json();
+      const purchases: PurchaseList = await purchasesResponse.json();
 
       await test.step("course is not purchased", () => {
-        expect(
-          purchases.filter(({ courseId }) => courseId === draftCourse.id),
-        ).toEqual([]);
+        expect(purchases).toEqual([]);
       });
     },
   );
@@ -131,16 +127,17 @@ test.describe("purchase course - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthenticatedPurchaseCallers) {
     test(
-      `${id}: ${title} buying a course - should return ${status}`,
+      `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
       async ({ rawCourseController, publishedCourse }) => {
-        const response = await test.step(`${title} purchases the course`, () =>
-          rawCourseController.purchaseCourse(publishedCourse.id, getToken()));
+        const response =
+          await test.step(`purchase the course with ${title}`, () =>
+            rawCourseController.purchaseCourse(publishedCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

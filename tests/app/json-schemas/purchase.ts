@@ -13,7 +13,7 @@ export const purchaseSchema = z.strictObject({
 export type Purchase = z.infer<typeof purchaseSchema>;
 
 // One element of GET /api/purchases: the purchase plus a short course card.
-export const purchaseListItemSchema = purchaseSchema.extend({
+const purchaseListItemSchema = purchaseSchema.extend({
   course: z.strictObject({
     id: z.cuid(),
     title: z.string(),

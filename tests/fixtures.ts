@@ -277,13 +277,13 @@ export const test = base.extend<Fixtures>({
           buildUpdateCourseData({ price: purchasableCoursePrice }),
         ),
     );
-    const { id, title, slug } = await response.json();
+    const { id, title, slug, imageUrl } = await response.json();
 
     await base.step("precondition: admin publishes the course", () =>
       courseController.publishCourse(id, adminToken),
     );
 
-    await use({ id, title, slug, price: purchasableCoursePrice });
+    await use({ id, title, slug, imageUrl, price: purchasableCoursePrice });
   },
 
   purchaseController: async ({ api }, use) => {

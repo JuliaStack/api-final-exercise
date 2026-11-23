@@ -1,10 +1,13 @@
-import { purchaseListSchema } from "../../app/json-schemas/purchase";
+import {
+  purchaseListSchema,
+  type PurchaseList,
+} from "../../app/json-schemas/purchase";
 import { unauthenticatedPurchasesListCallers } from "../../app/test-data/invalid-purchase-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("get purchases", () => {
   test(
-    "API-124: user who bought a course - should see it in the purchases with amount and course card",
+    "API-124: user who bought a course - should see it in their purchases with amount and course card",
     { tag: ["@regression", "@smoke"] },
     async ({
       courseController,
@@ -21,28 +24,29 @@ test.describe("get purchases", () => {
       const response = await test.step("user requests their purchases", () =>
         purchaseController.getPurchases(userToken));
 
-      const json = await response.json();
+      const json: PurchaseList = await response.json();
 
       await test.step("response body matches the purchase list schema", () => {
         const result = purchaseListSchema.safeParse(json);
         expect(result.error?.issues ?? []).toEqual([]);
       });
 
-      await test.step("list contains only the new purchase", () => {
+      await test.step("list contains exactly one purchase", () => {
         expect(json).toHaveLength(1);
       });
 
       await test.step("purchase belongs to the user, is charged the course price and has the course card", () => {
-        expect({ ...json[0], amount: Number(json[0].amount) }).toMatchObject({
+        expect(json[0]).toMatchObject({
           id: purchase.id,
           userId: registeredUser.id,
           courseId: publishedCourse.id,
-          amount: publishedCourse.price,
+          amount: String(publishedCourse.price),
           promoCode: null,
           course: {
             id: publishedCourse.id,
             title: publishedCourse.title,
             slug: publishedCourse.slug,
+            imageUrl: publishedCourse.imageUrl,
           },
         });
       });
@@ -65,7 +69,7 @@ test.describe("get purchases", () => {
       const response = await test.step("user requests their purchases", () =>
         purchaseController.getPurchases(userToken));
 
-      const json = await response.json();
+      const json: PurchaseList = await response.json();
 
       await test.step("list is empty", () => {
         expect(json).toEqual([]);
@@ -78,16 +82,17 @@ test.describe("get purchases - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthenticatedPurchasesListCallers) {
     test(
-      `${id}: ${title} requesting purchases - should return ${status}`,
+      `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
       async ({ rawPurchaseController }) => {
-        const response = await test.step(`${title} requests purchases`, () =>
-          rawPurchaseController.getPurchases(getToken()));
+        const response =
+          await test.step(`request purchases with ${title}`, () =>
+            rawPurchaseController.getPurchases(token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

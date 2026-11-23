@@ -24,7 +24,8 @@ The goal is tests that protect **critical business scenarios** and look as if th
    - separate checks for fields the Zod schema already guarantees (only assert values that depend on the request: email, name, updated fields);
    - checks of framework or library behavior rather than the API's business logic;
    - status-only tests where the outcome matters (e.g. a change must persist, so verify it with a follow-up GET, as `update-user.spec.ts` does).
-5. **Consistency beats personal style.** Before writing, read the existing files of each layer and copy their shape: naming, structure, step wording, case format. Don't introduce new patterns, helpers, or libraries when the existing ones cover the task.
+5. **Test ids are stable identifiers, not ordinals.** An `API-NNN` id, once written, is never renumbered, shifted or reused, even if the test is deleted or a case is removed. Gaps in the sequence are fine; don't "close" them. New tests take the highest existing id + 1 (see "Find the next free id"); never fill a gap. Ids live in git history, CI reports and the docs, so changing one silently breaks every reference to it.
+6. **Consistency beats personal style.** Before writing, read the existing files of each layer and copy their shape: naming, structure, step wording, case format. Don't introduce new patterns, helpers, or libraries when the existing ones cover the task.
 
 ## Workflow
 
@@ -48,7 +49,7 @@ The goal is tests that protect **critical business scenarios** and look as if th
 
 - Open the route in `src/app/api/...` and note: what it accepts, what it returns on success, which statuses and error messages it produces, and which `requireAuth` / `requireAdmin` checks apply. Cross-check with `src/lib/validations/` and, if needed, `src/app/api/docs/openapi.json`.
 - Read `docs/test-writing-order.md` and the existing specs and layers in `tests/app/`. The docs can lag behind the code; the code wins.
-- Find the next free id: `grep -rhoE "API-[0-9]+" tests | sort -t- -k2 -n | tail -1`.
+- Find the next free id: `grep -rhoE "API-[0-9]+" tests | sort -t- -k2 -n | tail -1`. The next id is that number + 1; gaps below it are intentional, so never reuse them.
 
 ### 1. Scenario plan (no plan handed over): show it to the user before writing code
 

@@ -81,7 +81,7 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
 
 - `test` / `expect` imported **only** from `../fixtures`, never from `@playwright/test`.
 - Describes: `test.describe("<flow>", ...)` for positive, `test.describe("<flow> - negative scenarios", ...)` for negative; **no tags on describes**. Every `test(...)` has its own tag as the 2nd argument: `{ tag: "@regression" }`, plus `@smoke` only for the main happy path of a resource (`{ tag: ["@regression", "@smoke"] }`); negatives and secondary flows are `@regression` only.
-- Titles: `API-NNN: <subject> - should <expectation>`; in a loop `` `${id}: ${title} - should return ${status}` ``. Ids unique and following on from the current highest id.
+- Titles: `API-NNN: <subject> - should <expectation>`; in a loop `` `${id}: ${title} - should return ${status}` ``. Ids unique and following on from the current highest id. **Ids are stable:** a gap in the sequence is fine and is not a finding. An id of an existing (committed) test that was changed, shifted or reused for another test is a blocker; check with `git diff HEAD -- tests | grep -E "^[-+].*API-[0-9]+"` that no existing id changed. When a test was deleted, its id must not reappear.
 - Everything inside `test.step(...)`; order request → status (if relevant) → schema → values.
 - **Arrange → Act → Assert**:
   - Arrange: fixtures/builders/setup; setup steps prefixed `precondition:`; request data built here, not inside the Act step; no assertions.
@@ -135,7 +135,7 @@ When the new code **copies** a sibling that has a flaw, do not accept it as "con
 
 Severity:
 
-- **Blocker**: fix before committing. A wrong or false-passing test (wrong expected status, an assertion that can't fail, a request in the wrong controller), `tsc`/`prettier` errors, duplicate ids, `test.only`, hardcoded secrets, import from `@playwright/test`, tests that depend on each other or on seed data, more than one request in the Act step.
+- **Blocker**: fix before committing. A wrong or false-passing test (wrong expected status, an assertion that can't fail, a request in the wrong controller), `tsc`/`prettier` errors, duplicate ids, a renumbered or reused id of an existing test, `test.only`, hardcoded secrets, import from `@playwright/test`, tests that depend on each other or on seed data, more than one request in the Act step.
 - **Should fix**: breaks a project convention or weakens the test (assertions in a controller, import-time `payload`, missing `precondition:` prefix, missing tags, schema not `strictObject`, a duplicate schema check, status-only where persistence matters, missing error-field check in a negative, a missing status check in a negative or in a positive with a non-200 success status, a redundant `status code matches 200` step, a duplicate or low-value test, an unrequested edge case).
 - **Nit**: harmless but inconsistent style and naming (step wording, title phrasing, ordering, 3 or more per-field `toBe` checks instead of one `toMatchObject`).
 
