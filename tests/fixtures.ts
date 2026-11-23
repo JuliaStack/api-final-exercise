@@ -4,6 +4,7 @@ import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
 import { PostController } from "./app/controllers/post-controller";
+import { PromoCodeController } from "./app/controllers/promo-code-controller";
 import { PurchaseController } from "./app/controllers/purchase-controller";
 import { TagController } from "./app/controllers/tag-controller";
 import { UserController } from "./app/controllers/user-controller";
@@ -102,6 +103,8 @@ type Fixtures = {
   postIdsToDelete: string[];
   // Creates a post as admin; every created post is deleted in teardown.
   createPost: (overrides?: Partial<CreatePostData>) => Promise<CreatedPost>;
+  promoCodeController: PromoCodeController;
+  rawPromoCodeController: PromoCodeController;
 };
 
 export const test = base.extend<Fixtures>({
@@ -367,6 +370,14 @@ export const test = base.extend<Fixtures>({
       postIdsToDelete.push(id);
       return { id, title: data.title, slug };
     });
+  },
+
+  promoCodeController: async ({ api }, use) => {
+    await use(new PromoCodeController(api));
+  },
+
+  rawPromoCodeController: async ({ request }, use) => {
+    await use(new PromoCodeController(request));
   },
 });
 

@@ -164,12 +164,13 @@ Reply in the language the user writes in. Report after **every** stage, short, w
 
 - **After plan (Gate 1):** plan path, scenarios `S-id: title (risk)`, not planned, open questions → "Confirm or adjust the scenarios."
 - **After create:** each changed file with one line on what was added; the `API-NNN` ids assigned; the `tsc` / `prettier` / playwright results as reported (if tests weren't run, say so). Then "Starting review."
-- **After each review:** the verdict; counts `N blockers, N should fix, N nits`; the review file path; the next step (fix round N, or the final report).
+- **After each review:** the verdict; counts `N blockers, N should fix, N nits`; the review file path; **every finding from the reviewer's summary as a one-liner, nits and `unsure` items included**; the plan coverage (`S-id → test ids`) when the reviewer gave it; what the reviewer says it did not check; the edge cases it noticed; the next step (fix round N, or the final report). Never shorten the reviewer's findings to counts, and never drop one because it looks minor. If the reviewer's summary has no findings list but the counts are above zero, read the review file and relay its findings.
 - **Final report (Gate 2):**
   - the final verdict;
   - the changed files;
   - the review file, if any is left;
-  - what is still open after 2 fix rounds;
+  - what is still open after 2 fix rounds, with every open finding (nits included) as a one-liner;
+  - what the reviewer did not check;
   - the edge cases noted by the stages (one line each, not implemented);
   - anything that was interrupted and resumed.
 
