@@ -27,6 +27,32 @@ export const unauthorizedCreatePromoCodeCallers: {
   },
 ];
 
+// Callers rejected with 401 by PATCH /api/admin/courses/{courseId}/promo-codes/{promoCodeId}.
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedTogglePromoCodeCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
+  {
+    id: "API-150",
+    title: "anonymous user",
+    token: undefined,
+    status: 401,
+    error: "Unauthorized",
+  },
+  {
+    id: "API-151",
+    title: "expired admin token",
+    token: expiredToken,
+    status: 401,
+    error: "Unauthorized",
+  },
+];
+
 // Each case breaks exactly one field, because the API returns only the first validation error.
 export const invalidPromoCodeData = [
   {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 // Response body of POST /api/admin/courses/{courseId}/promo-codes
+// and PATCH /api/admin/courses/{courseId}/promo-codes/{promoCodeId}
 export const promoCodeSchema = z.strictObject({
   id: z.cuid(),
   code: z.string(),

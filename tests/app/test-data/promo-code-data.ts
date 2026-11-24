@@ -16,3 +16,6 @@ export function buildPromoCodeData(
 
 // Well-formed code that buildPromoCodeData never generates, so it never exists.
 export const nonExistingPromoCode = "NO-SUCH-CODE";
+
+// Well-formed id (25 chars, cuid-like) that never exists.
+export const nonExistingPromoCodeId = "cnonexistingpromocode0000";
