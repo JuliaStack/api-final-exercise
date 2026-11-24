@@ -30,4 +30,16 @@ export class PromoCodeController extends BaseController {
       { headers: this.authHeaders(accessToken) },
     );
   }
+
+  // Deletes by promo code id only; the route ignores `courseId`.
+  async deletePromoCode(
+    courseId: string,
+    promoCodeId: string,
+    accessToken: string | undefined,
+  ) {
+    return this.request.delete(
+      `api/admin/courses/${courseId}/promo-codes/${promoCodeId}`,
+      { headers: this.authHeaders(accessToken) },
+    );
+  }
 }
