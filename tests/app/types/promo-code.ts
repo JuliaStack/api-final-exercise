@@ -30,4 +30,4 @@ export type PromoCodeListItem = Pick<
   | "currentUses"
   | "expiresAt"
   | "isActive"
->;
+> & { _count: { usages: number } };
