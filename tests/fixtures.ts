@@ -3,11 +3,13 @@ import { dirname } from "node:path";
 import { test as base, expect, APIRequestContext } from "@playwright/test";
 import { CategoryController } from "./app/controllers/category-controller";
 import { CourseController } from "./app/controllers/course-controller";
+import { LearningPathController } from "./app/controllers/learning-path-controller";
 import { PostController } from "./app/controllers/post-controller";
 import { PromoCodeController } from "./app/controllers/promo-code-controller";
 import { PurchaseController } from "./app/controllers/purchase-controller";
 import { TagController } from "./app/controllers/tag-controller";
 import { UserController } from "./app/controllers/user-controller";
+import { YoutubeVideoController } from "./app/controllers/youtube-video-controller";
 import type {
   CourseWithChapters,
   CreatedCategory,
@@ -115,6 +117,12 @@ export type Fixtures = {
     courseId: string,
     overrides?: Partial<CreatePromoCodeData>,
   ) => Promise<CreatedPromoCode>;
+  learningPathController: LearningPathController;
+  rawLearningPathController: LearningPathController;
+  youtubeVideoController: YoutubeVideoController;
+  // Video ids pushed here are deleted as admin in teardown, even if the test fails.
+  // Learning paths themselves cannot be deleted through the API.
+  videoIdsToDelete: string[];
 };
 
 export const test = base.extend<Fixtures>({
@@ -404,6 +412,26 @@ export const test = base.extend<Fixtures>({
       const { id, code } = await response.json();
       return { id, code };
     });
+  },
+
+  learningPathController: async ({ api }, use) => {
+    await use(new LearningPathController(api));
+  },
+
+  rawLearningPathController: async ({ request }, use) => {
+    await use(new LearningPathController(request));
+  },
+
+  youtubeVideoController: async ({ api }, use) => {
+    await use(new YoutubeVideoController(api));
+  },
+
+  videoIdsToDelete: async ({ youtubeVideoController, adminToken }, use) => {
+    const ids: string[] = [];
+    await use(ids);
+    await deleteEach(ids, (id) =>
+      youtubeVideoController.deleteVideo(id, adminToken),
+    );
   },
 });
 

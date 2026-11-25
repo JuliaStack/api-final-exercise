@@ -21,7 +21,7 @@ export const courseSchema = z.strictObject({
   updatedAt: z.iso.datetime(),
 });
 
-const categorySchema = z.strictObject({
+export const categorySchema = z.strictObject({
   id: z.cuid(),
   name: z.string(),
   slug: z.string(),
