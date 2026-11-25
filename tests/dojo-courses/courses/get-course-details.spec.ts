@@ -3,7 +3,7 @@ import {
   type CourseDetail,
 } from "../../app/json-schemas/course";
 import { nonExistingCourseId } from "../../app/test-data/course-data";
-import { nonAdminCourseDetailsCallers } from "../../app/test-data/non-admin-callers-data";
+import { unauthorizedGetDraftCourseCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("get course by id", () => {
@@ -65,7 +65,7 @@ test.describe("get course by id", () => {
 });
 
 test.describe("get course by id - negative scenarios", () => {
-  for (const { id, title, getToken } of nonAdminCourseDetailsCallers) {
+  for (const { id, title, getToken } of unauthorizedGetDraftCourseCallers) {
     test(
       `${id}: ${title} - should get 404 for a draft course`,
       { tag: "@regression" },

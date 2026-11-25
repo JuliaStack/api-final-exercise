@@ -6,7 +6,7 @@ import {
 } from "../../app/test-data/course-data";
 import {
   incompleteCourseData,
-  nonAdminPublishCourseCallers,
+  unauthorizedPublishCourseCallers,
 } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
@@ -182,7 +182,7 @@ test.describe("publish course - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminPublishCourseCallers) {
+  } of unauthorizedPublishCourseCallers) {
     test(
       `${id}: ${title} publishing a course - should return ${status}`,
       { tag: "@regression" },

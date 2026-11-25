@@ -4,7 +4,7 @@ import {
 } from "../../app/json-schemas/learning-path";
 import {
   invalidLearningPathData,
-  nonAdminCreateLearningPathCallers,
+  unauthorizedCreateLearningPathCallers,
 } from "../../app/test-data/invalid-learning-path-data";
 import {
   buildLearningPathCertificateData,
@@ -189,7 +189,7 @@ test.describe("create learning path - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminCreateLearningPathCallers) {
+  } of unauthorizedCreateLearningPathCallers) {
     test(
       `${id}: ${title} creating a learning path - should return ${status}`,
       { tag: "@regression" },

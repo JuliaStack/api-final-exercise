@@ -3,7 +3,7 @@ import {
   type Purchase,
   type PurchaseList,
 } from "../../app/json-schemas/purchase";
-import { unauthenticatedPurchaseCallers } from "../../app/test-data/invalid-purchase-data";
+import { unauthorizedPurchaseCourseCallers } from "../../app/test-data/invalid-purchase-data";
 import { nonExistingPromoCode } from "../../app/test-data/promo-code-data";
 import type { PromoCodeListItem } from "../../app/types/promo-code";
 import { expect, test, type Fixtures } from "../../fixtures";
@@ -198,7 +198,7 @@ test.describe("purchase course - negative scenarios", () => {
     token,
     status,
     error,
-  } of unauthenticatedPurchaseCallers) {
+  } of unauthorizedPurchaseCourseCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },

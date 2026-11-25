@@ -2,7 +2,7 @@ import {
   purchaseListSchema,
   type PurchaseList,
 } from "../../app/json-schemas/purchase";
-import { unauthenticatedPurchasesListCallers } from "../../app/test-data/invalid-purchase-data";
+import { unauthorizedListPurchasesCallers } from "../../app/test-data/invalid-purchase-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("get purchases", () => {
@@ -85,7 +85,7 @@ test.describe("get purchases - negative scenarios", () => {
     token,
     status,
     error,
-  } of unauthenticatedPurchasesListCallers) {
+  } of unauthorizedListPurchasesCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },

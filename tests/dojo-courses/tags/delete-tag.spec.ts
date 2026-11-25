@@ -1,5 +1,5 @@
 import type { CreatedTag } from "../../app/types/tag";
-import { nonAdminDeleteTagCallers } from "../../app/test-data/invalid-tag-data";
+import { unauthorizedDeleteTagCallers } from "../../app/test-data/invalid-tag-data";
 import { buildTagData, nonExistingTagId } from "../../app/test-data/tag-data";
 import { expect, test } from "../../fixtures";
 
@@ -42,7 +42,7 @@ test.describe("delete tag - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminDeleteTagCallers) {
+  } of unauthorizedDeleteTagCallers) {
     test(
       `${id}: ${title} deleting a tag - should return ${status}`,
       { tag: "@regression" },

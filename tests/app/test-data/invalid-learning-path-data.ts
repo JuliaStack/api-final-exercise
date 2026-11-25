@@ -3,7 +3,7 @@ import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not create a learning path with POST /api/learning-paths.
 // `getToken` picks the Authorization token for the case (undefined = no header).
-export const nonAdminCreateLearningPathCallers = [
+export const unauthorizedCreateLearningPathCallers = [
   {
     id: "API-172",
     title: "anonymous user",

@@ -3,7 +3,7 @@ import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not create a post with POST /api/posts.
 // `getToken` picks the Authorization token for the case (undefined = no header).
-export const nonAdminCreatePostCallers = [
+export const unauthorizedCreatePostCallers = [
   {
     id: "API-093",
     title: "anonymous user",
@@ -28,7 +28,7 @@ export const nonAdminCreatePostCallers = [
 ];
 
 // Callers that must not update a post with PATCH /api/posts/{postId}.
-export const nonAdminUpdatePostCallers = [
+export const unauthorizedUpdatePostCallers = [
   {
     id: "API-107",
     title: "anonymous user",
@@ -53,7 +53,7 @@ export const nonAdminUpdatePostCallers = [
 ];
 
 // Callers that must not delete a post with DELETE /api/posts/{postId}.
-export const nonAdminDeletePostCallers = [
+export const unauthorizedDeletePostCallers = [
   {
     id: "API-111",
     title: "anonymous user",

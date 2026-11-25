@@ -4,7 +4,7 @@ import type { CreatedTag } from "../types/tag";
 
 // Callers that must not create a tag with POST /api/tags.
 // `getToken` picks the Authorization token for the case (undefined = no header).
-export const nonAdminCreateTagCallers = [
+export const unauthorizedCreateTagCallers = [
   {
     id: "API-079",
     title: "anonymous user",
@@ -64,7 +64,7 @@ export const invalidTagData = [
 ];
 
 // Callers that must not delete a tag with DELETE /api/tags/{tagId}.
-export const nonAdminDeleteTagCallers = [
+export const unauthorizedDeleteTagCallers = [
   {
     id: "API-087",
     title: "anonymous user",

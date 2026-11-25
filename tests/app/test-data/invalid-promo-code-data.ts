@@ -109,7 +109,7 @@ export const invalidPromoCodeData = [
 
 // Callers rejected with 401 by POST /api/courses/{courseId}/validate-promo.
 // `token` is the Authorization token for the case (undefined = no header).
-export const unauthenticatedValidatePromoCallers: {
+export const unauthorizedValidatePromoCodeCallers: {
   id: string;
   title: string;
   token: string | undefined;

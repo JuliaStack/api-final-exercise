@@ -7,7 +7,7 @@ import {
   buildUpdateCourseData,
   nonExistingCourseId,
 } from "../../app/test-data/course-data";
-import { nonAdminUpdateCourseCallers } from "../../app/test-data/invalid-course-data";
+import { unauthorizedUpdateCourseCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("update course", () => {
@@ -178,7 +178,7 @@ test.describe("update course - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminUpdateCourseCallers) {
+  } of unauthorizedUpdateCourseCallers) {
     test(
       `${id}: ${title} updating a course - should return ${status}`,
       { tag: "@regression" },

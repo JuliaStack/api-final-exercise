@@ -1,7 +1,7 @@
 import { postSchema, type Post } from "../../app/json-schemas/post";
 import {
   invalidPostData,
-  nonAdminCreatePostCallers,
+  unauthorizedCreatePostCallers,
 } from "../../app/test-data/invalid-post-data";
 import { buildPostData } from "../../app/test-data/post-data";
 import { expect, test } from "../../fixtures";
@@ -158,7 +158,7 @@ test.describe("create post - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminCreatePostCallers) {
+  } of unauthorizedCreatePostCallers) {
     test(
       `${id}: ${title} creating a post - should return ${status}`,
       { tag: "@regression" },

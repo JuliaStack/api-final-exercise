@@ -3,7 +3,7 @@ import { tagSchema } from "../../app/json-schemas/tag";
 import {
   duplicateTagNameData,
   invalidTagData,
-  nonAdminCreateTagCallers,
+  unauthorizedCreateTagCallers,
 } from "../../app/test-data/invalid-tag-data";
 import { buildTagData } from "../../app/test-data/tag-data";
 import { expect, test } from "../../fixtures";
@@ -55,7 +55,7 @@ test.describe("create tag - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminCreateTagCallers) {
+  } of unauthorizedCreateTagCallers) {
     test(
       `${id}: ${title} creating a tag - should return ${status}`,
       { tag: "@regression" },

@@ -2,7 +2,7 @@ import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not purchase a course with POST /api/courses/{courseId}/purchase.
 // `token` is the Authorization token for the case (undefined = no header).
-export const unauthenticatedPurchaseCallers: {
+export const unauthorizedPurchaseCourseCallers: {
   id: string;
   title: string;
   token: string | undefined;
@@ -27,7 +27,7 @@ export const unauthenticatedPurchaseCallers: {
 
 // Callers that must not read purchases with GET /api/purchases.
 // `token` is the Authorization token for the case (undefined = no header).
-export const unauthenticatedPurchasesListCallers: {
+export const unauthorizedListPurchasesCallers: {
   id: string;
   title: string;
   token: string | undefined;

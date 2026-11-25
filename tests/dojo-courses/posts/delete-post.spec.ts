@@ -1,5 +1,5 @@
 import type { Post } from "../../app/json-schemas/post";
-import { nonAdminDeletePostCallers } from "../../app/test-data/invalid-post-data";
+import { unauthorizedDeletePostCallers } from "../../app/test-data/invalid-post-data";
 import {
   buildPostData,
   nonExistingPostId,
@@ -49,7 +49,7 @@ test.describe("delete post - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminDeletePostCallers) {
+  } of unauthorizedDeletePostCallers) {
     test(
       `${id}: ${title} deleting a post - should return ${status}`,
       { tag: "@regression" },

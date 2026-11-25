@@ -3,7 +3,7 @@ import {
   type CoursesPage,
 } from "../../app/json-schemas/course";
 import { buildSearchToken } from "../../app/test-data/course-data";
-import { nonAdminCourseListCallers } from "../../app/test-data/non-admin-callers-data";
+import { unauthorizedListDraftCoursesCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("get courses list", () => {
@@ -38,7 +38,7 @@ test.describe("get courses list", () => {
     },
   );
 
-  for (const { id, title, getToken } of nonAdminCourseListCallers) {
+  for (const { id, title, getToken } of unauthorizedListDraftCoursesCallers) {
     test(
       `${id}: ${title} - should not see a draft course in the list`,
       { tag: "@regression" },

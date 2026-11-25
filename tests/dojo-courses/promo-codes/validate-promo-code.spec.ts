@@ -6,7 +6,7 @@ import {
   nonExistingCourseId,
   purchasableCoursePrice,
 } from "../../app/test-data/course-data";
-import { unauthenticatedValidatePromoCallers } from "../../app/test-data/invalid-promo-code-data";
+import { unauthorizedValidatePromoCodeCallers } from "../../app/test-data/invalid-promo-code-data";
 import { nonExistingPromoCode } from "../../app/test-data/promo-code-data";
 import type { PromoCodeListItem } from "../../app/types/promo-code";
 import { expect, test, type Fixtures } from "../../fixtures";
@@ -213,7 +213,7 @@ test.describe("validate promo code - negative scenarios", () => {
     token,
     status,
     error,
-  } of unauthenticatedValidatePromoCallers) {
+  } of unauthorizedValidatePromoCodeCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },

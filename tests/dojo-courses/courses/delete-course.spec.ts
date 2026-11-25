@@ -3,7 +3,7 @@ import {
   buildCourseData,
   nonExistingCourseId,
 } from "../../app/test-data/course-data";
-import { nonAdminDeleteCourseCallers } from "../../app/test-data/invalid-course-data";
+import { unauthorizedDeleteCourseCallers } from "../../app/test-data/invalid-course-data";
 import { expect, test } from "../../fixtures";
 
 test.describe("delete course", () => {
@@ -51,7 +51,7 @@ test.describe("delete course - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminDeleteCourseCallers) {
+  } of unauthorizedDeleteCourseCallers) {
     test(
       `${id}: ${title} deleting a course - should return ${status}`,
       { tag: "@regression" },

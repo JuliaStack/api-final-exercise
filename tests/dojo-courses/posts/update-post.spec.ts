@@ -1,6 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { postSchema, type Post } from "../../app/json-schemas/post";
-import { nonAdminUpdatePostCallers } from "../../app/test-data/invalid-post-data";
+import { unauthorizedUpdatePostCallers } from "../../app/test-data/invalid-post-data";
 import {
   buildPostData,
   nonExistingPostId,
@@ -225,7 +225,7 @@ test.describe("update post - negative scenarios", () => {
     getToken,
     status,
     error,
-  } of nonAdminUpdatePostCallers) {
+  } of unauthorizedUpdatePostCallers) {
     test(
       `${id}: ${title} updating a post - should return ${status}`,
       { tag: "@regression" },
