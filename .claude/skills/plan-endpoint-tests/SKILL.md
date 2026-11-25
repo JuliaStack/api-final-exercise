@@ -29,6 +29,7 @@ The plan must protect **critical business scenarios**. Every scenario must answe
    - a separate scenario for a `200` status alone (the `api` context already fails on non-2xx, so a happy path doesn't assert `200`).
 5. **Statuses in the plan.** Every negative scenario names the exact status (and error text) it expects, since the tests will assert it. A positive scenario names its status only when it is not `200` (e.g. `201`); the tests assert that one explicitly.
 6. **Consistency with the suite.** The plan should lean on what already exists (controllers, fixtures, builders, schemas, case-array format) and name what is missing. Don't propose new patterns or libraries.
+7. **Search the suite before calling something impossible.** Before you write that a state or scenario "cannot be arranged", "is unreachable" or "can't be tested" (in **Not planned**, **Open questions**, or a scenario), grep `tests/` (specs, fixtures, test-data) for how existing tests reach the same state: another endpoint's spec may already arrange it (e.g. an expired promo code is arranged in `validate-promo-code.spec.ts` by creating it with a short `expiresAt` and polling until it expires). Reuse that way. Only when nothing there works, and the code or schema really blocks it, call it impossible, and put in the plan the one-line reason **and what you searched** (grep terms / files). A "not reachable" claim without that is a guess.
 
 ## Workflow
 
@@ -112,7 +113,7 @@ If a decision table is used, put it here under the scenarios.
 
 ## Not planned (deliberately)
 
-- What was left out and why (already covered by `<spec>`, same equivalence class as S2, framework behavior, ...).
+- What was left out and why (already covered by `<spec>`, same equivalence class as S2, framework behavior, ...). For "can't be arranged / unreachable", also name what was searched in `tests/` (principle 7).
 
 ## Edge cases noticed (not planned)
 
