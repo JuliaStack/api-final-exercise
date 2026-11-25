@@ -2,103 +2,106 @@ import { buildCourseData, buildUpdateCourseData } from "./course-data";
 import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not create a course with POST /api/courses.
-// `getToken` picks the Authorization token for the case (undefined = no header).
-export const unauthorizedCreateCourseCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedCreateCourseCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-044",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-045",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-046",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
 // Callers that must not update a course with PATCH /api/courses/{courseId}.
-export const unauthorizedUpdateCourseCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedUpdateCourseCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-058",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-059",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-060",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
 // Callers that must not publish a course with PATCH /api/courses/{courseId}/publish.
-export const unauthorizedPublishCourseCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedPublishCourseCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-067",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-068",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-069",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
 // Callers that must not delete a course with DELETE /api/courses/{courseId}.
-export const unauthorizedDeleteCourseCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedDeleteCourseCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-072",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-073",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-074",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
@@ -138,40 +141,41 @@ export const invalidCourseData = [
 ];
 
 // Callers that must not see unpublished courses in GET /api/courses.
-// `getToken` picks the Authorization token for the case (undefined = no header).
-export const unauthorizedListDraftCoursesCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedListDraftCoursesCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+}[] = [
   {
     id: "API-034",
-    title: "anonymous",
-    getToken: (): string | undefined => undefined,
-  },
-  {
-    id: "API-035",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
+    title: "anonymous user",
+    token: undefined,
   },
   {
     id: "API-036",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
   },
 ];
 
 // Callers that must not get a draft course by id from GET /api/courses/{courseId}.
-export const unauthorizedGetDraftCourseCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedGetDraftCourseCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+}[] = [
   {
     id: "API-050",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
-  },
-  {
-    id: "API-051",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
+    token: undefined,
   },
   {
     id: "API-052",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
   },
 ];

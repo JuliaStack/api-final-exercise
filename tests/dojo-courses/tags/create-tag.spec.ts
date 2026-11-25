@@ -52,18 +52,18 @@ test.describe("create tag - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedCreateTagCallers) {
     test(
       `${id}: ${title} creating a tag - should return ${status}`,
       { tag: "@regression" },
-      async ({ tagController, rawTagController, userToken }) => {
+      async ({ tagController, rawTagController }) => {
         const data = buildTagData();
 
         const response = await test.step(`${title} creates a tag`, () =>
-          rawTagController.createTag(getToken(userToken), data));
+          rawTagController.createTag(token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -86,6 +86,36 @@ test.describe("create tag - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-081: regular user creating a tag - should return 403",
+    { tag: "@regression" },
+    async ({ tagController, rawTagController, userToken }) => {
+      const data = buildTagData();
+
+      const response = await test.step("regular user creates a tag", () =>
+        rawTagController.createTag(userToken, data));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const listResponse =
+        await test.step("anonymous user requests the tag list", () =>
+          tagController.getTags());
+
+      const list: CreatedTag[] = await listResponse.json();
+
+      await test.step("tag is not created", () => {
+        expect(list.map(({ name }) => name)).not.toContain(data.name);
+      });
+    },
+  );
 
   for (const { id, title, buildName, status, error } of duplicateTagNameData) {
     test(

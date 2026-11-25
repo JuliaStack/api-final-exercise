@@ -39,16 +39,16 @@ test.describe("delete tag - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedDeleteTagCallers) {
     test(
       `${id}: ${title} deleting a tag - should return ${status}`,
       { tag: "@regression" },
-      async ({ tagController, rawTagController, createdTag, userToken }) => {
+      async ({ tagController, rawTagController, createdTag }) => {
         const response = await test.step(`${title} deletes the tag`, () =>
-          rawTagController.deleteTag(createdTag.id, getToken(userToken)));
+          rawTagController.deleteTag(createdTag.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -71,6 +71,34 @@ test.describe("delete tag - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-089: regular user deleting a tag - should return 403",
+    { tag: "@regression" },
+    async ({ tagController, rawTagController, createdTag, userToken }) => {
+      const response = await test.step("regular user deletes the tag", () =>
+        rawTagController.deleteTag(createdTag.id, userToken));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const listResponse =
+        await test.step("anonymous user requests the tag list", () =>
+          tagController.getTags());
+
+      const list: CreatedTag[] = await listResponse.json();
+
+      await test.step("tag is kept and unchanged", () => {
+        expect(list).toContainEqual(createdTag);
+      });
+    },
+  );
 
   test.fail(
     "API-116: admin deleting a non-existing tag - should return 404",

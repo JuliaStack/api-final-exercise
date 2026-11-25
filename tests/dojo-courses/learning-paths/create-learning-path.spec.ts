@@ -186,7 +186,7 @@ test.describe("create learning path - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedCreateLearningPathCallers) {
@@ -197,17 +197,13 @@ test.describe("create learning path - negative scenarios", () => {
         rawLearningPathController,
         youtubeVideoController,
         videoIdsToDelete,
-        userToken,
       }) => {
         const video = buildLearningPathVideoData();
         const data = buildLearningPathData({ video });
 
         const response =
           await test.step(`${title} creates a learning path`, () =>
-            rawLearningPathController.createLearningPath(
-              getToken(userToken),
-              data,
-            ));
+            rawLearningPathController.createLearningPath(token, data));
 
         const json = await response.json();
         // eslint-disable-next-line playwright/no-conditional-in-test -- push only when the response has a video
@@ -233,6 +229,46 @@ test.describe("create learning path - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-174: regular user creating a learning path - should return 403",
+    { tag: "@regression" },
+    async ({
+      rawLearningPathController,
+      youtubeVideoController,
+      videoIdsToDelete,
+      userToken,
+    }) => {
+      const video = buildLearningPathVideoData();
+      const data = buildLearningPathData({ video });
+
+      const response =
+        await test.step("regular user creates a learning path", () =>
+          rawLearningPathController.createLearningPath(userToken, data));
+
+      const json = await response.json();
+      // eslint-disable-next-line playwright/no-conditional-in-test -- push only when the response has a video
+      if (json.video) videoIdsToDelete.push(json.video.id);
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const listResponse =
+        await test.step("anonymous user requests the video list", () =>
+          youtubeVideoController.getVideos());
+
+      const list: { title: string }[] = await listResponse.json();
+
+      await test.step("video of the learning path is not created", () => {
+        expect(list.map(({ title }) => title)).not.toContain(video.title);
+      });
+    },
+  );
 
   for (const {
     id,

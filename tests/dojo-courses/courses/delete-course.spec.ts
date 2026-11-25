@@ -48,7 +48,7 @@ test.describe("delete course - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedDeleteCourseCallers) {
@@ -59,14 +59,10 @@ test.describe("delete course - negative scenarios", () => {
         courseController,
         rawCourseController,
         draftCourse,
-        userToken,
         adminToken,
       }) => {
         const response = await test.step(`${title} deletes the course`, () =>
-          rawCourseController.deleteCourse(
-            draftCourse.id,
-            getToken(userToken),
-          ));
+          rawCourseController.deleteCourse(draftCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -89,6 +85,40 @@ test.describe("delete course - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-074: regular user deleting a course - should return 403",
+    { tag: "@regression" },
+    async ({
+      courseController,
+      rawCourseController,
+      draftCourse,
+      userToken,
+      adminToken,
+    }) => {
+      const response = await test.step("regular user deletes the course", () =>
+        rawCourseController.deleteCourse(draftCourse.id, userToken));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const detailsResponse =
+        await test.step("admin requests the course by id", () =>
+          courseController.getCourse(draftCourse.id, adminToken));
+
+      const details = await detailsResponse.json();
+
+      await test.step("course still exists", () => {
+        expect(details.id).toBe(draftCourse.id);
+      });
+    },
+  );
 
   test.fail(
     "API-118: admin deleting a non-existing course - should return 404",

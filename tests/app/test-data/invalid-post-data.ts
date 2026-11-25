@@ -2,78 +2,80 @@ import { buildPostData } from "./post-data";
 import { expiredToken } from "./invalid-token-data";
 
 // Callers that must not create a post with POST /api/posts.
-// `getToken` picks the Authorization token for the case (undefined = no header).
-export const unauthorizedCreatePostCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedCreatePostCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-093",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-094",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-095",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
 // Callers that must not update a post with PATCH /api/posts/{postId}.
-export const unauthorizedUpdatePostCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedUpdatePostCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-107",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-108",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-109",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 
 // Callers that must not delete a post with DELETE /api/posts/{postId}.
-export const unauthorizedDeletePostCallers = [
+// `token` is the Authorization token for the case (undefined = no header).
+// The regular user (403) is a standalone test: it needs the `userToken` fixture.
+export const unauthorizedDeletePostCallers: {
+  id: string;
+  title: string;
+  token: string | undefined;
+  status: number;
+  error: string;
+}[] = [
   {
     id: "API-111",
     title: "anonymous user",
-    getToken: (): string | undefined => undefined,
+    token: undefined,
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-112",
     title: "expired admin token",
-    getToken: (): string | undefined => expiredToken,
+    token: expiredToken,
     status: 401,
     error: "Unauthorized",
-  },
-  {
-    id: "API-113",
-    title: "regular user",
-    getToken: (userToken: string): string | undefined => userToken,
-    status: 403,
-    error: "Forbidden",
   },
 ];
 

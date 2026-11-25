@@ -179,7 +179,7 @@ test.describe("publish course - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedPublishCourseCallers) {
@@ -190,14 +190,10 @@ test.describe("publish course - negative scenarios", () => {
         courseController,
         rawCourseController,
         publishableCourse,
-        userToken,
         adminToken,
       }) => {
         const response = await test.step(`${title} publishes the course`, () =>
-          rawCourseController.publishCourse(
-            publishableCourse.id,
-            getToken(userToken),
-          ));
+          rawCourseController.publishCourse(publishableCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -220,6 +216,41 @@ test.describe("publish course - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-069: regular user publishing a course - should return 403",
+    { tag: "@regression" },
+    async ({
+      courseController,
+      rawCourseController,
+      publishableCourse,
+      userToken,
+      adminToken,
+    }) => {
+      const response =
+        await test.step("regular user publishes the course", () =>
+          rawCourseController.publishCourse(publishableCourse.id, userToken));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const detailsResponse =
+        await test.step("admin requests the course by id", () =>
+          courseController.getCourse(publishableCourse.id, adminToken));
+
+      const details: CourseDetail = await detailsResponse.json();
+
+      await test.step("course is not published", () => {
+        expect(details.isPublished).toBe(false);
+      });
+    },
+  );
 
   test(
     "API-070: admin publishing a non-existing course - should return 404",

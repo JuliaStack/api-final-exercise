@@ -175,7 +175,7 @@ test.describe("update course - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedUpdateCourseCallers) {
@@ -186,17 +186,12 @@ test.describe("update course - negative scenarios", () => {
         courseController,
         rawCourseController,
         draftCourse,
-        userToken,
         adminToken,
       }) => {
         const data = buildUpdateCourseData();
 
         const response = await test.step(`${title} updates the course`, () =>
-          rawCourseController.updateCourse(
-            draftCourse.id,
-            getToken(userToken),
-            data,
-          ));
+          rawCourseController.updateCourse(draftCourse.id, token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -220,6 +215,43 @@ test.describe("update course - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-060: regular user updating a course - should return 403",
+    { tag: "@regression" },
+    async ({
+      courseController,
+      rawCourseController,
+      draftCourse,
+      userToken,
+      adminToken,
+    }) => {
+      const data = buildUpdateCourseData();
+
+      const response = await test.step("regular user updates the course", () =>
+        rawCourseController.updateCourse(draftCourse.id, userToken, data));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const detailsResponse =
+        await test.step("admin requests the course by id", () =>
+          courseController.getCourse(draftCourse.id, adminToken));
+
+      const details: CourseDetail = await detailsResponse.json();
+
+      await test.step("course is not changed", () => {
+        expect(details.title).toBe(draftCourse.title);
+        expect(details.slug).toBe(draftCourse.slug);
+      });
+    },
+  );
 
   test.fail(
     "API-117: admin updating a non-existing course - should return 404",

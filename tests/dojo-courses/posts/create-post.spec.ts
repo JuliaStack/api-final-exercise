@@ -155,18 +155,18 @@ test.describe("create post - negative scenarios", () => {
   for (const {
     id,
     title,
-    getToken,
+    token,
     status,
     error,
   } of unauthorizedCreatePostCallers) {
     test(
       `${id}: ${title} creating a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, userToken }) => {
+      async ({ postController, rawPostController }) => {
         const data = buildPostData({ isPublished: true });
 
         const response = await test.step(`${title} creates a post`, () =>
-          rawPostController.createPost(getToken(userToken), data));
+          rawPostController.createPost(token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -189,6 +189,36 @@ test.describe("create post - negative scenarios", () => {
       },
     );
   }
+
+  test(
+    "API-095: regular user creating a post - should return 403",
+    { tag: "@regression" },
+    async ({ postController, rawPostController, userToken }) => {
+      const data = buildPostData({ isPublished: true });
+
+      const response = await test.step("regular user creates a post", () =>
+        rawPostController.createPost(userToken, data));
+
+      await test.step("status code matches 403", () => {
+        expect(response.status()).toBe(403);
+      });
+
+      const json = await response.json();
+      await test.step("response contains an error", () => {
+        expect(json.error).toContain("Forbidden");
+      });
+
+      const listResponse =
+        await test.step("anonymous user requests the post list", () =>
+          postController.getPosts());
+
+      const list: Post[] = await listResponse.json();
+
+      await test.step("post is not created", () => {
+        expect(list.map(({ title }) => title)).not.toContain(data.title);
+      });
+    },
+  );
 
   for (const { id, title, buildPayload, status, error } of invalidPostData) {
     test(
