@@ -13,5 +13,5 @@ export default defineConfig({
     // Keep the trace of the first retry, so CI failures show requests and responses.
     trace: "on-first-retry",
   },
-  reporter: [["html", { open: "never" }]],
+  reporter: [["list"], ["html", { open: "never" }]],
 });
