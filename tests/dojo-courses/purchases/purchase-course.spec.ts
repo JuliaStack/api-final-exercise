@@ -195,14 +195,16 @@ test.describe("purchase course - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedPurchaseCourseCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawCourseController, publishedCourse }) => {
+      async ({ rawCourseController, publishedCourse, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const response =
           await test.step(`purchase the course with ${title}`, () =>
             rawCourseController.purchaseCourse(publishedCourse.id, token));

@@ -82,14 +82,16 @@ test.describe("get purchases - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedListPurchasesCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawPurchaseController }) => {
+      async ({ rawPurchaseController, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const response =
           await test.step(`request purchases with ${title}`, () =>
             rawPurchaseController.getPurchases(token));

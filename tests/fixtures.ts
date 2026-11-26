@@ -25,6 +25,8 @@ import type {
 } from "./app/types/promo-code";
 import type { CreatedTag, CreateTagData } from "./app/types/tag";
 import type { CreatedUser } from "./app/types/user";
+import type { Caller } from "./app/types/caller";
+import { expiredToken } from "./app/test-data/invalid-token-data";
 import {
   buildCategoryData,
   buildChapterData,
@@ -74,6 +76,9 @@ export type Fixtures = {
   rawUserController: UserController;
   registeredUser: CreatedUser;
   userToken: string;
+  // Returns the Authorization token for a caller (undefined = no header).
+  // A user is registered only for "regularUser", so the other cases stay cheap.
+  tokenFor: (caller: Caller) => Promise<string | undefined>;
   adminToken: string;
   courseController: CourseController;
   rawCourseController: CourseController;
@@ -160,6 +165,24 @@ export const test = base.extend<Fixtures>({
     );
     const { access_token: userToken } = await response.json();
     await use(userToken);
+  },
+
+  tokenFor: async ({ userController }, use) => {
+    await use(async (caller) => {
+      if (caller === "anonymous") return undefined;
+      if (caller === "expiredToken") return expiredToken;
+
+      const user = buildUserData();
+      await base.step("precondition: register a new user", () =>
+        userController.registerUser(user),
+      );
+      const response = await base.step(
+        "precondition: get user access token",
+        () => userController.getToken(buildTokenRequestData(user)),
+      );
+      const { access_token } = await response.json();
+      return access_token as string;
+    });
   },
 
   // The admin token is requested in global setup and stored in a file;

@@ -96,7 +96,7 @@ test.describe("toggle promo code - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedTogglePromoCodeCallers) {
@@ -109,7 +109,10 @@ test.describe("toggle promo code - negative scenarios", () => {
         createPromoCode,
         draftCourse,
         adminToken,
+        tokenFor,
       }) => {
+        const token = await tokenFor(caller);
+
         const { id: promoCodeId } = await createPromoCode(draftCourse.id);
 
         const response =
@@ -142,49 +145,6 @@ test.describe("toggle promo code - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-152: regular user toggling a promo code - should return 403",
-    { tag: "@regression" },
-    async ({
-      promoCodeController,
-      rawPromoCodeController,
-      createPromoCode,
-      draftCourse,
-      userToken,
-      adminToken,
-    }) => {
-      const { id } = await createPromoCode(draftCourse.id);
-
-      const response =
-        await test.step("regular user toggles the promo code", () =>
-          rawPromoCodeController.togglePromoCode(
-            draftCourse.id,
-            id,
-            userToken,
-          ));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
-
-      const list: PromoCodeListItem[] = await listResponse.json();
-
-      await test.step("promo code is still active", () => {
-        const stored = list.find((item) => item.id === id);
-        expect(stored?.isActive).toBe(true);
-      });
-    },
-  );
 
   test(
     "API-153: admin toggling a non-existing promo code - should return 404",

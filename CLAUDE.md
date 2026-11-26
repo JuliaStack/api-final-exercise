@@ -41,7 +41,7 @@ Layered; each layer only depends on the ones below it:
 - `app/test-data/` — data builders (`buildUserData`, `buildTokenRequestData`, faker-based) and arrays of negative cases (`invalid-*-data.ts`, each with an `id` like `API-002`, a `title`, input, and expected result).
 - `app/controllers/` — thin wrappers over `APIRequestContext` extending `BaseController`. They make the HTTP call and return the raw response; **no assertions**.
 - `app/json-schemas/` — Zod schemas for response bodies; specs assert with `schema.safeParse(json)` and `expect(result.error?.issues ?? []).toEqual([])`.
-- `fixtures.ts` — the single `test`/`expect` export; specs must import from here, not `@playwright/test`. Fixture chain: `api` → `userController` → `registeredUser` → `userToken`; plus `adminToken`.
+- `fixtures.ts` — the single `test`/`expect` export; specs must import from here, not `@playwright/test`. Fixture chain: `api` → `userController` → `registeredUser` → `userToken`; plus `adminToken`, and `tokenFor(caller)` for the access-control caller arrays (registers a user only for `"regularUser"`).
 - `dojo-courses/<domain>/*.spec.ts` — the specs, grouped by domain: `auth/`, `users/`, `courses/` (`global-setup.ts` stays in the root of `dojo-courses/`).
 
 Key convention: two controllers exist on purpose.

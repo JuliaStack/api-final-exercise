@@ -103,14 +103,21 @@ test.describe("create course - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedCreateCourseCallers) {
     test(
       `${id}: ${title} creating a course - should return ${status}`,
       { tag: "@regression" },
-      async ({ courseController, rawCourseController, adminToken }) => {
+      async ({
+        courseController,
+        rawCourseController,
+        adminToken,
+        tokenFor,
+      }) => {
+        const token = await tokenFor(caller);
+
         const data = buildCourseData();
 
         const response = await test.step(`${title} creates a course`, () =>
@@ -137,41 +144,6 @@ test.describe("create course - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-046: regular user creating a course - should return 403",
-    { tag: "@regression" },
-    async ({
-      courseController,
-      rawCourseController,
-      userToken,
-      adminToken,
-    }) => {
-      const data = buildCourseData();
-
-      const response = await test.step("regular user creates a course", () =>
-        rawCourseController.createCourse(userToken, data));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("admin searches for the course by title", () =>
-          courseController.getCourses({ search: data.title }, adminToken));
-
-      const list = await listResponse.json();
-
-      await test.step("course is not created", () => {
-        expect(list.pagination.total).toBe(0);
-      });
-    },
-  );
 
   for (const { id, title, buildPayload, status, error } of invalidCourseData) {
     test(

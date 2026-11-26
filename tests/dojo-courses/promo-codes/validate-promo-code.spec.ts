@@ -210,14 +210,16 @@ test.describe("validate promo code - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedValidatePromoCodeCallers) {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawCourseController }) => {
+      async ({ rawCourseController, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const response =
           await test.step(`validate a promo code with ${title}`, () =>
             rawCourseController.validatePromoCode(nonExistingCourseId, token, {

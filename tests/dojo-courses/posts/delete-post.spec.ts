@@ -46,14 +46,16 @@ test.describe("delete post - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedDeletePostCallers) {
     test(
       `${id}: ${title} deleting a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, createPost }) => {
+      async ({ postController, rawPostController, createPost, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const post = await createPost({ isPublished: true });
 
         const response = await test.step(`${title} deletes the post`, () =>
@@ -80,36 +82,6 @@ test.describe("delete post - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-113: regular user deleting a post - should return 403",
-    { tag: "@regression" },
-    async ({ postController, rawPostController, createPost, userToken }) => {
-      const post = await createPost({ isPublished: true });
-
-      const response = await test.step("regular user deletes the post", () =>
-        rawPostController.deletePost(post.id, userToken));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
-
-      const list: Post[] = await listResponse.json();
-
-      await test.step("post is kept in the public list", () => {
-        expect(list.map(({ id }) => id)).toContain(post.id);
-      });
-    },
-  );
 
   test.fail(
     "API-114: admin deleting a non-existing post - should return 404",

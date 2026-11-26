@@ -1,30 +1,29 @@
 import { buildTagData } from "./tag-data";
-import { expiredToken } from "./invalid-token-data";
+import type { UnauthorizedCaller } from "../types/caller";
 import type { CreatedTag } from "../types/tag";
 
 // Callers that must not create a tag with POST /api/tags.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedCreateTagCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+export const unauthorizedCreateTagCallers: UnauthorizedCaller[] = [
   {
     id: "API-079",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-080",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
+  },
+  {
+    id: "API-081",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
   },
 ];
 
@@ -64,27 +63,26 @@ export const invalidTagData = [
 ];
 
 // Callers that must not delete a tag with DELETE /api/tags/{tagId}.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedDeleteTagCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+export const unauthorizedDeleteTagCallers: UnauthorizedCaller[] = [
   {
     id: "API-087",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-088",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
+  },
+  {
+    id: "API-089",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
   },
 ];

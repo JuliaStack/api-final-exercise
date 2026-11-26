@@ -1,29 +1,28 @@
 import { buildLearningPathData } from "./learning-path-data";
-import { expiredToken } from "./invalid-token-data";
+import type { UnauthorizedCaller } from "../types/caller";
 
 // Callers that must not create a learning path with POST /api/learning-paths.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedCreateLearningPathCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+export const unauthorizedCreateLearningPathCallers: UnauthorizedCaller[] = [
   {
     id: "API-172",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-173",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
+  },
+  {
+    id: "API-174",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
   },
 ];
 

@@ -222,14 +222,16 @@ test.describe("update post - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedUpdatePostCallers) {
     test(
       `${id}: ${title} updating a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, createPost }) => {
+      async ({ postController, rawPostController, createPost, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const post = await createPost({ isPublished: true });
         const data = buildPostData();
 
@@ -260,40 +262,6 @@ test.describe("update post - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-109: regular user updating a post - should return 403",
-    { tag: "@regression" },
-    async ({ postController, rawPostController, createPost, userToken }) => {
-      const post = await createPost({ isPublished: true });
-      const data = buildPostData();
-
-      const response = await test.step("regular user updates the post", () =>
-        rawPostController.updatePost(post.id, userToken, data));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
-
-      const list: Post[] = await listResponse.json();
-
-      await test.step("post is not changed", () => {
-        expect(list.find(({ id }) => id === post.id)).toMatchObject({
-          title: post.title,
-          slug: post.slug,
-        });
-      });
-    },
-  );
 
   test.fail(
     "API-115: admin updating a non-existing post - should return 404",

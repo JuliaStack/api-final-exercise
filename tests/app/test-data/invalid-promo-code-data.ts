@@ -1,81 +1,78 @@
 import { buildPromoCodeData } from "./promo-code-data";
-import { expiredToken } from "./invalid-token-data";
+import type { UnauthorizedCaller } from "../types/caller";
 
-// Callers rejected with 401 by POST /api/admin/courses/{courseId}/promo-codes.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedCreatePromoCodeCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+// Callers rejected by POST /api/admin/courses/{courseId}/promo-codes.
+export const unauthorizedCreatePromoCodeCallers: UnauthorizedCaller[] = [
   {
     id: "API-131",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-132",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
   },
+  {
+    id: "API-133",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
+  },
 ];
 
-// Callers rejected with 401 by PATCH /api/admin/courses/{courseId}/promo-codes/{promoCodeId}.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedTogglePromoCodeCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+// Callers rejected by PATCH /api/admin/courses/{courseId}/promo-codes/{promoCodeId}.
+export const unauthorizedTogglePromoCodeCallers: UnauthorizedCaller[] = [
   {
     id: "API-150",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-151",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
   },
+  {
+    id: "API-152",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
+  },
 ];
 
-// Callers rejected with 401 by DELETE /api/admin/courses/{courseId}/promo-codes/{promoCodeId}.
-// `token` is the Authorization token for the case (undefined = no header).
-// The regular user (403) is a standalone test: it needs the `userToken` fixture.
-export const unauthorizedDeletePromoCodeCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+// Callers rejected by DELETE /api/admin/courses/{courseId}/promo-codes/{promoCodeId}.
+export const unauthorizedDeletePromoCodeCallers: UnauthorizedCaller[] = [
   {
     id: "API-156",
     title: "anonymous user",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-157",
     title: "expired admin token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
+  },
+  {
+    id: "API-158",
+    title: "regular user",
+    caller: "regularUser",
+    status: 403,
+    error: "Forbidden",
   },
 ];
 
@@ -108,25 +105,18 @@ export const invalidPromoCodeData = [
 ];
 
 // Callers rejected with 401 by POST /api/courses/{courseId}/validate-promo.
-// `token` is the Authorization token for the case (undefined = no header).
-export const unauthorizedValidatePromoCodeCallers: {
-  id: string;
-  title: string;
-  token: string | undefined;
-  status: number;
-  error: string;
-}[] = [
+export const unauthorizedValidatePromoCodeCallers: UnauthorizedCaller[] = [
   {
     id: "API-145",
     title: "no token",
-    token: undefined,
+    caller: "anonymous",
     status: 401,
     error: "Unauthorized",
   },
   {
     id: "API-146",
     title: "expired token",
-    token: expiredToken,
+    caller: "expiredToken",
     status: 401,
     error: "Unauthorized",
   },

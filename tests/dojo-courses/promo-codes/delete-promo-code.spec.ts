@@ -42,7 +42,7 @@ test.describe("delete promo code - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedDeletePromoCodeCallers) {
@@ -55,7 +55,10 @@ test.describe("delete promo code - negative scenarios", () => {
         createPromoCode,
         draftCourse,
         adminToken,
+        tokenFor,
       }) => {
+        const token = await tokenFor(caller);
+
         const { id: promoCodeId } = await createPromoCode(draftCourse.id);
 
         const response =
@@ -87,48 +90,6 @@ test.describe("delete promo code - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-158: regular user deleting a promo code - should return 403",
-    { tag: "@regression" },
-    async ({
-      promoCodeController,
-      rawPromoCodeController,
-      createPromoCode,
-      draftCourse,
-      userToken,
-      adminToken,
-    }) => {
-      const { id } = await createPromoCode(draftCourse.id);
-
-      const response =
-        await test.step("regular user deletes the promo code", () =>
-          rawPromoCodeController.deletePromoCode(
-            draftCourse.id,
-            id,
-            userToken,
-          ));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
-
-      const list: PromoCodeListItem[] = await listResponse.json();
-
-      await test.step("promo code is still in the list", () => {
-        expect(list.map((item) => item.id)).toContain(id);
-      });
-    },
-  );
 
   test.fail(
     "API-159: admin deleting a non-existing promo code - should return 404",

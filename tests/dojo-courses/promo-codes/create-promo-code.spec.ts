@@ -87,7 +87,7 @@ test.describe("create promo code - negative scenarios", () => {
   for (const {
     id,
     title,
-    token,
+    caller,
     status,
     error,
   } of unauthorizedCreatePromoCodeCallers) {
@@ -99,7 +99,10 @@ test.describe("create promo code - negative scenarios", () => {
         rawPromoCodeController,
         draftCourse,
         adminToken,
+        tokenFor,
       }) => {
+        const token = await tokenFor(caller);
+
         const data = buildPromoCodeData();
 
         const response = await test.step(`${title} creates a promo code`, () =>
@@ -126,47 +129,6 @@ test.describe("create promo code - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-133: regular user creating a promo code - should return 403",
-    { tag: "@regression" },
-    async ({
-      promoCodeController,
-      rawPromoCodeController,
-      draftCourse,
-      userToken,
-      adminToken,
-    }) => {
-      const data = buildPromoCodeData();
-
-      const response =
-        await test.step("regular user creates a promo code", () =>
-          rawPromoCodeController.createPromoCode(
-            draftCourse.id,
-            userToken,
-            data,
-          ));
-
-      await test.step("status code matches 403", () => {
-        expect(response.status()).toBe(403);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Forbidden");
-      });
-
-      const listResponse =
-        await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
-
-      const list: PromoCodeListItem[] = await listResponse.json();
-
-      await test.step("promo code is not created", () => {
-        expect(list).toEqual([]);
-      });
-    },
-  );
 
   test(
     "API-134: admin creating a promo code for a non-existing course - should return 404",

@@ -38,11 +38,13 @@ test.describe("get courses list", () => {
     },
   );
 
-  for (const { id, title, token } of unauthorizedListDraftCoursesCallers) {
+  for (const { id, title, caller } of unauthorizedListDraftCoursesCallers) {
     test(
       `${id}: ${title} - should not see a draft course in the list`,
       { tag: "@regression" },
-      async ({ courseController, draftCourse }) => {
+      async ({ courseController, draftCourse, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const response =
           await test.step(`${title} searches for the draft course`, () =>
             courseController.getCourses({ search: draftCourse.title }, token));
@@ -56,26 +58,6 @@ test.describe("get courses list", () => {
       },
     );
   }
-
-  test(
-    "API-035: regular user - should not see a draft course in the list",
-    { tag: "@regression" },
-    async ({ courseController, draftCourse, userToken }) => {
-      const response =
-        await test.step("regular user searches for the draft course", () =>
-          courseController.getCourses(
-            { search: draftCourse.title },
-            userToken,
-          ));
-
-      const json = await response.json();
-
-      await test.step("draft course is not in the list", () => {
-        expect(json.pagination.total).toBe(0);
-        expect(json.data).toEqual([]);
-      });
-    },
-  );
 
   test(
     "API-037: admin should see a draft course in the list",

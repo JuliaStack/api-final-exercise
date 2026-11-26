@@ -65,11 +65,13 @@ test.describe("get course by id", () => {
 });
 
 test.describe("get course by id - negative scenarios", () => {
-  for (const { id, title, token } of unauthorizedGetDraftCourseCallers) {
+  for (const { id, title, caller } of unauthorizedGetDraftCourseCallers) {
     test(
       `${id}: ${title} - should get 404 for a draft course`,
       { tag: "@regression" },
-      async ({ rawCourseController, draftCourse }) => {
+      async ({ rawCourseController, draftCourse, tokenFor }) => {
+        const token = await tokenFor(caller);
+
         const response =
           await test.step(`${title} requests the draft course by id`, () =>
             rawCourseController.getCourse(draftCourse.id, token));
@@ -85,25 +87,6 @@ test.describe("get course by id - negative scenarios", () => {
       },
     );
   }
-
-  test(
-    "API-051: regular user - should get 404 for a draft course",
-    { tag: "@regression" },
-    async ({ rawCourseController, draftCourse, userToken }) => {
-      const response =
-        await test.step("regular user requests the draft course by id", () =>
-          rawCourseController.getCourse(draftCourse.id, userToken));
-
-      await test.step("status code matches 404", () => {
-        expect(response.status()).toBe(404);
-      });
-
-      const json = await response.json();
-      await test.step("response contains an error", () => {
-        expect(json.error).toContain("Course not found");
-      });
-    },
-  );
 
   test(
     "API-053: non-existing course id - should return 404",
