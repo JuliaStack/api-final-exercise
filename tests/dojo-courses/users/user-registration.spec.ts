@@ -36,7 +36,7 @@ test.describe("register a new user", () => {
 });
 
 test.describe("register a new user - negative scenarios", () => {
-  for (const { id, title, payload } of invalidRegistrationData) {
+  for (const { id, title, payload, error } of invalidRegistrationData) {
     test(
       `${id}: ${title} - should return 400`,
       { tag: "@regression" },
@@ -50,8 +50,8 @@ test.describe("register a new user - negative scenarios", () => {
         });
 
         const json = await response.json();
-        await test.step("response contains an error message", async () => {
-          expect(json.error).toBeTruthy();
+        await test.step("response contains an error", async () => {
+          expect(json.error).toContain(error);
         });
       },
     );
@@ -74,8 +74,8 @@ test.describe("register a new user - negative scenarios", () => {
       });
 
       const json = await response.json();
-      await test.step("response contains an error message", async () => {
-        expect(json.error).toBeTruthy();
+      await test.step("response contains an error", async () => {
+        expect(json.error).toBe("Email already registered");
       });
     },
   );
