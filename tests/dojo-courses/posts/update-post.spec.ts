@@ -11,7 +11,7 @@ test.describe("update post", () => {
   test(
     "API-101: admin updating all fields of a published post - should return 200 and the updated post",
     { tag: ["@regression", "@smoke"] },
-    async ({ postController, createPost, createdTag, adminToken }) => {
+    async ({ apiClient, createPost, createdTag, adminToken }) => {
       const post = await createPost({ isPublished: true });
       const data = buildPostData({
         tagIds: [createdTag.id],
@@ -29,7 +29,7 @@ test.describe("update post", () => {
       };
 
       const response = await test.step("admin updates the post", () =>
-        postController.updatePost(post.id, adminToken, data));
+        apiClient.posts.updatePost(post.id, adminToken, data));
 
       const json: Post = await response.json();
 
@@ -44,7 +44,7 @@ test.describe("update post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -57,7 +57,7 @@ test.describe("update post", () => {
   test(
     "API-102: admin updating only the excerpt - should leave the other fields unchanged",
     { tag: "@regression" },
-    async ({ postController, createPost, createdTag, adminToken }) => {
+    async ({ apiClient, createPost, createdTag, adminToken }) => {
       const post = await createPost({
         isPublished: true,
         tagIds: [createdTag.id],
@@ -66,17 +66,17 @@ test.describe("update post", () => {
 
       const beforeResponse =
         await test.step("precondition: anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const beforeList: Post[] = await beforeResponse.json();
       const before = beforeList.find(({ id }) => id === post.id);
 
       await test.step("admin updates only the excerpt", () =>
-        postController.updatePost(post.id, adminToken, { excerpt }));
+        apiClient.posts.updatePost(post.id, adminToken, { excerpt }));
 
       const afterResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const afterList: Post[] = await afterResponse.json();
       const after = afterList.find(({ id }) => id === post.id);
@@ -94,11 +94,11 @@ test.describe("update post", () => {
   test(
     "API-103: admin publishing a draft - should put the post into the public list",
     { tag: "@regression" },
-    async ({ postController, createPost, adminToken }) => {
+    async ({ apiClient, createPost, adminToken }) => {
       const post = await createPost();
 
       const response = await test.step("admin publishes the draft", () =>
-        postController.updatePost(post.id, adminToken, { isPublished: true }));
+        apiClient.posts.updatePost(post.id, adminToken, { isPublished: true }));
 
       const json: Post = await response.json();
 
@@ -108,7 +108,7 @@ test.describe("update post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -121,11 +121,11 @@ test.describe("update post", () => {
   test(
     "API-104: admin unpublishing a post - should remove it from the public list",
     { tag: "@regression" },
-    async ({ postController, createPost, adminToken }) => {
+    async ({ apiClient, createPost, adminToken }) => {
       const post = await createPost({ isPublished: true });
 
       const response = await test.step("admin unpublishes the post", () =>
-        postController.updatePost(post.id, adminToken, { isPublished: false }));
+        apiClient.posts.updatePost(post.id, adminToken, { isPublished: false }));
 
       const json: Post = await response.json();
 
@@ -135,7 +135,7 @@ test.describe("update post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -148,7 +148,7 @@ test.describe("update post", () => {
   test(
     "API-105: admin sending tagIds - should replace the tags of the post",
     { tag: "@regression" },
-    async ({ postController, createPost, createTag, adminToken }) => {
+    async ({ apiClient, createPost, createTag, adminToken }) => {
       const firstTag = await createTag();
       const secondTag = await createTag();
       const post = await createPost({
@@ -158,7 +158,7 @@ test.describe("update post", () => {
 
       const response =
         await test.step("admin moves the post to the second tag", () =>
-          postController.updatePost(post.id, adminToken, {
+          apiClient.posts.updatePost(post.id, adminToken, {
             tagIds: [secondTag.id],
           }));
 
@@ -170,7 +170,7 @@ test.describe("update post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -185,13 +185,13 @@ test.describe("update post", () => {
   test(
     "API-106: admin renaming a post to the title of another post - should give it a unique slug",
     { tag: "@regression" },
-    async ({ postController, createPost, adminToken }) => {
+    async ({ apiClient, createPost, adminToken }) => {
       const existingPost = await createPost({ isPublished: true });
       const renamedPost = await createPost({ isPublished: true });
 
       const response =
         await test.step("admin renames the second post to the title of the first post", () =>
-          postController.updatePost(renamedPost.id, adminToken, {
+          apiClient.posts.updatePost(renamedPost.id, adminToken, {
             title: existingPost.title,
           }));
 
@@ -204,7 +204,7 @@ test.describe("update post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -229,14 +229,14 @@ test.describe("update post - negative scenarios", () => {
     test(
       `${id}: ${title} updating a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, createPost, tokenFor }) => {
+      async ({ apiClient, rawApiClient, createPost, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const post = await createPost({ isPublished: true });
         const data = buildPostData();
 
         const response = await test.step(`${title} updates the post`, () =>
-          rawPostController.updatePost(post.id, token, data));
+          rawApiClient.posts.updatePost(post.id, token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -249,7 +249,7 @@ test.describe("update post - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the post list", () =>
-            postController.getPosts());
+            apiClient.posts.getPosts());
 
         const list: Post[] = await listResponse.json();
 
@@ -273,12 +273,12 @@ test.describe("update post - negative scenarios", () => {
           "the route calls prisma.post.update without a lookup and returns 500 for a missing id",
       },
     },
-    async ({ rawPostController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const data = buildPostData();
 
       const response =
         await test.step("admin updates a non-existing post", () =>
-          rawPostController.updatePost(nonExistingPostId, adminToken, data));
+          rawApiClient.posts.updatePost(nonExistingPostId, adminToken, data));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

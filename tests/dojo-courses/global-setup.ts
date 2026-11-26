@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { request, FullConfig } from "@playwright/test";
-import { UserController } from "../app/controllers/user-controller";
+import { ApiClient } from "../app/api-client";
 import {
   adminCredentials,
   buildTokenRequestData,
@@ -21,7 +21,7 @@ export default async function globalSetup(config: FullConfig) {
     console.log(`Global setup OK: ${response.status()} ${response.url()}`);
 
     // The admin token is shared by all tests: get it once and keep it in a file.
-    const tokenResponse = await new UserController(apiRequest).getToken(
+    const tokenResponse = await new ApiClient(apiRequest).users.getToken(
       buildTokenRequestData(adminCredentials),
     );
     const { access_token } = await tokenResponse.json();

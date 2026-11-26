@@ -13,8 +13,7 @@ type ArrangeFixtures = Pick<
   | "publishedCourse"
   | "createDraftCourse"
   | "createPromoCode"
-  | "promoCodeController"
-  | "courseController"
+  | "apiClient"
   | "adminToken"
 >;
 
@@ -23,14 +22,13 @@ test.describe("purchase course", () => {
     "API-119: user buying a published course - should return 201 and record the purchase",
     { tag: ["@regression", "@smoke"] },
     async ({
-      courseController,
-      purchaseController,
+      apiClient,
       publishedCourse,
       registeredUser,
       userToken,
     }) => {
       const response = await test.step("user purchases the course", () =>
-        courseController.purchaseCourse(publishedCourse.id, userToken));
+        apiClient.courses.purchaseCourse(publishedCourse.id, userToken));
 
       await test.step("status code matches 201", () => {
         expect(response.status()).toBe(201);
@@ -54,7 +52,7 @@ test.describe("purchase course", () => {
 
       const purchasesResponse =
         await test.step("user requests their purchases", () =>
-          purchaseController.getPurchases(userToken));
+          apiClient.purchases.getPurchases(userToken));
 
       const purchases: PurchaseList = await purchasesResponse.json();
 
@@ -68,8 +66,7 @@ test.describe("purchase course", () => {
     "API-162: user buying a course with a valid promo code - should return 201 at the discounted price",
     { tag: "@regression" },
     async ({
-      courseController,
-      promoCodeController,
+      apiClient,
       createPromoCode,
       publishedCourse,
       registeredUser,
@@ -83,7 +80,7 @@ test.describe("purchase course", () => {
 
       const response =
         await test.step("user purchases the course with the promo code", () =>
-          courseController.purchaseCourse(publishedCourse.id, userToken, {
+          apiClient.courses.purchaseCourse(publishedCourse.id, userToken, {
             promoCode: code,
           }));
 
@@ -106,7 +103,7 @@ test.describe("purchase course", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(publishedCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(publishedCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -126,17 +123,16 @@ test.describe("purchase course - negative scenarios", () => {
     "API-120: user buying the same course twice - should return 409",
     { tag: "@regression" },
     async ({
-      courseController,
-      rawCourseController,
-      purchaseController,
+      apiClient,
+      rawApiClient,
       publishedCourse,
       userToken,
     }) => {
       await test.step("precondition: user purchases the course", () =>
-        courseController.purchaseCourse(publishedCourse.id, userToken));
+        apiClient.courses.purchaseCourse(publishedCourse.id, userToken));
 
       const response = await test.step("user purchases the course again", () =>
-        rawCourseController.purchaseCourse(publishedCourse.id, userToken));
+        rawApiClient.courses.purchaseCourse(publishedCourse.id, userToken));
 
       await test.step("status code matches 409", () => {
         expect(response.status()).toBe(409);
@@ -149,7 +145,7 @@ test.describe("purchase course - negative scenarios", () => {
 
       const purchasesResponse =
         await test.step("user requests their purchases", () =>
-          purchaseController.getPurchases(userToken));
+          apiClient.purchases.getPurchases(userToken));
 
       const purchases: PurchaseList = await purchasesResponse.json();
 
@@ -163,13 +159,13 @@ test.describe("purchase course - negative scenarios", () => {
     "API-121: user buying a draft course - should return 404",
     { tag: "@regression" },
     async ({
-      rawCourseController,
-      purchaseController,
+      rawApiClient,
+      apiClient,
       draftCourse,
       userToken,
     }) => {
       const response = await test.step("user purchases the draft course", () =>
-        rawCourseController.purchaseCourse(draftCourse.id, userToken));
+        rawApiClient.courses.purchaseCourse(draftCourse.id, userToken));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);
@@ -182,7 +178,7 @@ test.describe("purchase course - negative scenarios", () => {
 
       const purchasesResponse =
         await test.step("user requests their purchases", () =>
-          purchaseController.getPurchases(userToken));
+          apiClient.purchases.getPurchases(userToken));
 
       const purchases: PurchaseList = await purchasesResponse.json();
 
@@ -202,12 +198,12 @@ test.describe("purchase course - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawCourseController, publishedCourse, tokenFor }) => {
+      async ({ rawApiClient, publishedCourse, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response =
           await test.step(`purchase the course with ${title}`, () =>
-            rawCourseController.purchaseCourse(publishedCourse.id, token));
+            rawApiClient.courses.purchaseCourse(publishedCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -260,12 +256,12 @@ test.describe("purchase course - negative scenarios", () => {
       arrange: async ({
         publishedCourse,
         createPromoCode,
-        promoCodeController,
+        apiClient,
         adminToken,
       }) => {
         const { id, code } = await createPromoCode(publishedCourse.id);
         await test.step("precondition: admin deactivates the promo code", () =>
-          promoCodeController.togglePromoCode(
+          apiClient.promoCodes.togglePromoCode(
             publishedCourse.id,
             id,
             adminToken,
@@ -280,14 +276,14 @@ test.describe("purchase course - negative scenarios", () => {
       arrange: async ({
         publishedCourse,
         createPromoCode,
-        courseController,
+        apiClient,
         adminToken,
       }) => {
         const { code } = await createPromoCode(publishedCourse.id, {
           maxUses: 1,
         });
         await test.step("precondition: admin purchases the course with the promo code", () =>
-          courseController.purchaseCourse(publishedCourse.id, adminToken, {
+          apiClient.courses.purchaseCourse(publishedCourse.id, adminToken, {
             promoCode: code,
           }));
         return { code, promoCourseId: publishedCourse.id };
@@ -300,7 +296,7 @@ test.describe("purchase course - negative scenarios", () => {
       arrange: async ({
         publishedCourse,
         createPromoCode,
-        courseController,
+        apiClient,
         adminToken,
       }) => {
         // A short margin, because the server compares with its own clock.
@@ -313,7 +309,7 @@ test.describe("purchase course - negative scenarios", () => {
           expect
             .poll(
               async () => {
-                const response = await courseController.validatePromoCode(
+                const response = await apiClient.courses.validatePromoCode(
                   publishedCourse.id,
                   adminToken,
                   { code },
@@ -338,8 +334,7 @@ test.describe("purchase course - negative scenarios", () => {
       `${id}: user buying a course with a ${title} - should return 201 at full price`,
       { tag: "@regression" },
       async ({
-        courseController,
-        promoCodeController,
+        apiClient,
         createDraftCourse,
         createPromoCode,
         publishedCourse,
@@ -350,14 +345,13 @@ test.describe("purchase course - negative scenarios", () => {
           publishedCourse,
           createDraftCourse,
           createPromoCode,
-          promoCodeController,
-          courseController,
+          apiClient,
           adminToken,
         });
 
         const response =
           await test.step(`user purchases the course with a ${title}`, () =>
-            courseController.purchaseCourse(publishedCourse.id, userToken, {
+            apiClient.courses.purchaseCourse(publishedCourse.id, userToken, {
               promoCode: code,
             }));
 
@@ -376,7 +370,7 @@ test.describe("purchase course - negative scenarios", () => {
 
         const listResponse =
           await test.step("admin requests the promo codes of the course", () =>
-            promoCodeController.getPromoCodes(promoCourseId, adminToken));
+            apiClient.promoCodes.getPromoCodes(promoCourseId, adminToken));
 
         const list: PromoCodeListItem[] = await listResponse.json();
 

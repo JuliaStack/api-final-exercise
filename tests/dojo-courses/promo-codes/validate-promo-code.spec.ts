@@ -16,8 +16,7 @@ type ArrangeFixtures = Pick<
   | "publishedCourse"
   | "createDraftCourse"
   | "createPromoCode"
-  | "promoCodeController"
-  | "courseController"
+  | "apiClient"
   | "adminToken"
 >;
 
@@ -26,8 +25,7 @@ test.describe("validate promo code", () => {
     "API-139: user validating a promo code of the course - should return the discount and the final price",
     { tag: ["@regression", "@smoke"] },
     async ({
-      courseController,
-      promoCodeController,
+      apiClient,
       createPromoCode,
       publishedCourse,
       userToken,
@@ -39,7 +37,7 @@ test.describe("validate promo code", () => {
       });
 
       const response = await test.step("user validates the promo code", () =>
-        courseController.validatePromoCode(publishedCourse.id, userToken, {
+        apiClient.courses.validatePromoCode(publishedCourse.id, userToken, {
           code,
         }));
 
@@ -61,7 +59,7 @@ test.describe("validate promo code", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(publishedCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(publishedCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -106,12 +104,12 @@ test.describe("validate promo code - negative scenarios", () => {
       arrange: async ({
         publishedCourse,
         createPromoCode,
-        promoCodeController,
+        apiClient,
         adminToken,
       }) => {
         const { id, code } = await createPromoCode(publishedCourse.id);
         await test.step("precondition: admin deactivates the promo code", () =>
-          promoCodeController.togglePromoCode(
+          apiClient.promoCodes.togglePromoCode(
             publishedCourse.id,
             id,
             adminToken,
@@ -126,14 +124,14 @@ test.describe("validate promo code - negative scenarios", () => {
       arrange: async ({
         publishedCourse,
         createPromoCode,
-        courseController,
+        apiClient,
         adminToken,
       }) => {
         const { code } = await createPromoCode(publishedCourse.id, {
           maxUses: 1,
         });
         await test.step("precondition: admin purchases the course with the promo code", () =>
-          courseController.purchaseCourse(publishedCourse.id, adminToken, {
+          apiClient.courses.purchaseCourse(publishedCourse.id, adminToken, {
             promoCode: code,
           }));
         return code;
@@ -146,8 +144,7 @@ test.describe("validate promo code - negative scenarios", () => {
       `${id}: ${title} - should not be valid`,
       { tag: "@regression" },
       async ({
-        courseController,
-        promoCodeController,
+        apiClient,
         createDraftCourse,
         createPromoCode,
         publishedCourse,
@@ -158,13 +155,12 @@ test.describe("validate promo code - negative scenarios", () => {
           publishedCourse,
           createDraftCourse,
           createPromoCode,
-          promoCodeController,
-          courseController,
+          apiClient,
           adminToken,
         });
 
         const response = await test.step(`user validates the ${title}`, () =>
-          courseController.validatePromoCode(publishedCourse.id, userToken, {
+          apiClient.courses.validatePromoCode(publishedCourse.id, userToken, {
             code,
           }));
 
@@ -184,10 +180,10 @@ test.describe("validate promo code - negative scenarios", () => {
   test(
     "API-144: empty promo code - should return 400",
     { tag: "@regression" },
-    async ({ rawCourseController, publishedCourse, userToken }) => {
+    async ({ rawApiClient, publishedCourse, userToken }) => {
       const response =
         await test.step("user validates an empty promo code", () =>
-          rawCourseController.validatePromoCode(publishedCourse.id, userToken, {
+          rawApiClient.courses.validatePromoCode(publishedCourse.id, userToken, {
             code: "",
           }));
 
@@ -217,12 +213,12 @@ test.describe("validate promo code - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawCourseController, tokenFor }) => {
+      async ({ rawApiClient, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response =
           await test.step(`validate a promo code with ${title}`, () =>
-            rawCourseController.validatePromoCode(nonExistingCourseId, token, {
+            rawApiClient.courses.validatePromoCode(nonExistingCourseId, token, {
               code: nonExistingPromoCode,
             }));
 
@@ -242,7 +238,7 @@ test.describe("validate promo code - negative scenarios", () => {
     "API-147: expired promo code - should not be valid",
     { tag: "@regression" },
     async ({
-      courseController,
+      apiClient,
       createPromoCode,
       publishedCourse,
       userToken,
@@ -259,7 +255,7 @@ test.describe("validate promo code - negative scenarios", () => {
         expect
           .poll(
             async () => {
-              const response = await courseController.validatePromoCode(
+              const response = await apiClient.courses.validatePromoCode(
                 publishedCourse.id,
                 userToken,
                 { code },

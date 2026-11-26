@@ -7,10 +7,10 @@ test.describe("get tags list", () => {
   test(
     "API-075: anonymous user gets the tag list - should include a newly created tag",
     { tag: ["@regression", "@smoke"] },
-    async ({ tagController, createdTag }) => {
+    async ({ apiClient, createdTag }) => {
       const response =
         await test.step("anonymous user requests the tag list", () =>
-          tagController.getTags());
+          apiClient.tags.getTags());
 
       const json: TagList = await response.json();
 
@@ -28,14 +28,14 @@ test.describe("get tags list", () => {
   test(
     "API-076: tag list - should be sorted by name ascending",
     { tag: "@regression" },
-    async ({ tagController, createTag }) => {
+    async ({ apiClient, createTag }) => {
       const { name: prefix } = buildTagData();
       const tagB = await createTag({ name: `${prefix} b` });
       const tagA = await createTag({ name: `${prefix} a` });
 
       const response =
         await test.step("anonymous user requests the tag list", () =>
-          tagController.getTags());
+          apiClient.tags.getTags());
 
       const json: TagList = await response.json();
 
@@ -51,10 +51,10 @@ test.describe("get tags list", () => {
   test(
     "API-077: user with an expired token - should still get the tag list",
     { tag: "@regression" },
-    async ({ tagController, createdTag }) => {
+    async ({ apiClient, createdTag }) => {
       const response =
         await test.step("user with an expired token requests the tag list", () =>
-          tagController.getTags(expiredToken));
+          apiClient.tags.getTags(expiredToken));
 
       const json: TagList = await response.json();
 

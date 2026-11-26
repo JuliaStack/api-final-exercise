@@ -10,17 +10,17 @@ test.describe("get course by id", () => {
   test(
     "API-048: anonymous user gets a published course by id - should return 200 and the course",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController, courseWithChapters, adminToken }) => {
+    async ({ apiClient, courseWithChapters, adminToken }) => {
       const { course } = courseWithChapters;
 
       await test.step("precondition: admin publishes the course", () =>
-        courseController.updateCourse(course.id, adminToken, {
+        apiClient.courses.updateCourse(course.id, adminToken, {
           isPublished: true,
         }));
 
       const response =
         await test.step("anonymous user requests the course by id", () =>
-          courseController.getCourse(course.id));
+          apiClient.courses.getCourse(course.id));
 
       const json: CourseDetail = await response.json();
 
@@ -40,12 +40,12 @@ test.describe("get course by id", () => {
   test(
     "API-049: admin should see a draft course with all its chapters in position order",
     { tag: "@regression" },
-    async ({ courseController, courseWithChapters, adminToken }) => {
+    async ({ apiClient, courseWithChapters, adminToken }) => {
       const { course, publishedChapter, draftChapter } = courseWithChapters;
 
       const response =
         await test.step("admin requests the draft course by id", () =>
-          courseController.getCourse(course.id, adminToken));
+          apiClient.courses.getCourse(course.id, adminToken));
 
       const json: CourseDetail = await response.json();
 
@@ -69,12 +69,12 @@ test.describe("get course by id - negative scenarios", () => {
     test(
       `${id}: ${title} - should get 404 for a draft course`,
       { tag: "@regression" },
-      async ({ rawCourseController, draftCourse, tokenFor }) => {
+      async ({ rawApiClient, draftCourse, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response =
           await test.step(`${title} requests the draft course by id`, () =>
-            rawCourseController.getCourse(draftCourse.id, token));
+            rawApiClient.courses.getCourse(draftCourse.id, token));
 
         await test.step("status code matches 404", () => {
           expect(response.status()).toBe(404);
@@ -91,10 +91,10 @@ test.describe("get course by id - negative scenarios", () => {
   test(
     "API-053: non-existing course id - should return 404",
     { tag: "@regression" },
-    async ({ rawCourseController }) => {
+    async ({ rawApiClient }) => {
       const response =
         await test.step("anonymous user requests a non-existing course", () =>
-          rawCourseController.getCourse(nonExistingCourseId));
+          rawApiClient.courses.getCourse(nonExistingCourseId));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

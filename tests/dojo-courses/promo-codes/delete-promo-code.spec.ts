@@ -9,7 +9,7 @@ test.describe("delete promo code", () => {
     "API-155: admin deleting an existing promo code - should remove the promo code",
     { tag: ["@regression", "@smoke"] },
     async ({
-      promoCodeController,
+      apiClient,
       createPromoCode,
       draftCourse,
       adminToken,
@@ -17,7 +17,7 @@ test.describe("delete promo code", () => {
       const { id } = await createPromoCode(draftCourse.id);
 
       const response = await test.step("admin deletes the promo code", () =>
-        promoCodeController.deletePromoCode(draftCourse.id, id, adminToken));
+        apiClient.promoCodes.deletePromoCode(draftCourse.id, id, adminToken));
 
       const json = await response.json();
 
@@ -27,7 +27,7 @@ test.describe("delete promo code", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -50,8 +50,8 @@ test.describe("delete promo code - negative scenarios", () => {
       `${id}: ${title} deleting a promo code - should return ${status}`,
       { tag: "@regression" },
       async ({
-        promoCodeController,
-        rawPromoCodeController,
+        apiClient,
+        rawApiClient,
         createPromoCode,
         draftCourse,
         adminToken,
@@ -63,7 +63,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
         const response =
           await test.step(`${title} deletes the promo code`, () =>
-            rawPromoCodeController.deletePromoCode(
+            rawApiClient.promoCodes.deletePromoCode(
               draftCourse.id,
               promoCodeId,
               token,
@@ -80,7 +80,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
         const listResponse =
           await test.step("admin requests the promo codes of the course", () =>
-            promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+            apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
         const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -101,10 +101,10 @@ test.describe("delete promo code - negative scenarios", () => {
           "the route calls prisma.promoCode.delete without a lookup and returns 500 with an empty body for a missing id",
       },
     },
-    async ({ rawPromoCodeController, draftCourse, adminToken }) => {
+    async ({ rawApiClient, draftCourse, adminToken }) => {
       const response =
         await test.step("admin deletes a non-existing promo code", () =>
-          rawPromoCodeController.deletePromoCode(
+          rawApiClient.promoCodes.deletePromoCode(
             draftCourse.id,
             nonExistingPromoCodeId,
             adminToken,
@@ -132,8 +132,8 @@ test.describe("delete promo code - negative scenarios", () => {
       },
     },
     async ({
-      promoCodeController,
-      rawPromoCodeController,
+      apiClient,
+      rawApiClient,
       createPromoCode,
       draftCourse,
       adminToken,
@@ -142,7 +142,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
       const response =
         await test.step("admin deletes the promo code through a non-existing course", () =>
-          rawPromoCodeController.deletePromoCode(
+          rawApiClient.promoCodes.deletePromoCode(
             nonExistingCourseId,
             id,
             adminToken,
@@ -154,7 +154,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the owning course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -175,8 +175,8 @@ test.describe("delete promo code - negative scenarios", () => {
       },
     },
     async ({
-      promoCodeController,
-      rawPromoCodeController,
+      apiClient,
+      rawApiClient,
       createPromoCode,
       createDraftCourse,
       draftCourse,
@@ -187,7 +187,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
       const response =
         await test.step("admin deletes the promo code through another course", () =>
-          rawPromoCodeController.deletePromoCode(
+          rawApiClient.promoCodes.deletePromoCode(
             otherCourse.id,
             id,
             adminToken,
@@ -199,7 +199,7 @@ test.describe("delete promo code - negative scenarios", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the owning course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 

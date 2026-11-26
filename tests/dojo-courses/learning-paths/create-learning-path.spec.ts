@@ -19,7 +19,7 @@ test.describe("create learning path", () => {
     "API-168: admin creating a learning path with modules, a category, a video, a certificate and an instructor - should return 201 and the learning path",
     { tag: ["@regression", "@smoke"] },
     async ({
-      learningPathController,
+      apiClient,
       videoIdsToDelete,
       createdCategory,
       adminToken,
@@ -35,7 +35,7 @@ test.describe("create learning path", () => {
       });
 
       const response = await test.step("admin creates a learning path", () =>
-        learningPathController.createLearningPath(adminToken, data));
+        apiClient.learningPaths.createLearningPath(adminToken, data));
 
       const json: LearningPath = await response.json();
       // eslint-disable-next-line playwright/no-conditional-in-test -- push only when the response has a video
@@ -77,7 +77,7 @@ test.describe("create learning path", () => {
   test(
     "API-169: admin creating a learning path with empty video and certificate objects - should return 201 without a video and a certificate",
     { tag: "@regression" },
-    async ({ learningPathController, videoIdsToDelete, adminToken }) => {
+    async ({ apiClient, videoIdsToDelete, adminToken }) => {
       const instructor = { name: "Instructor Name" };
       const data = buildLearningPathData({
         description: undefined,
@@ -91,7 +91,7 @@ test.describe("create learning path", () => {
       });
 
       const response = await test.step("admin creates a learning path", () =>
-        learningPathController.createLearningPath(adminToken, data));
+        apiClient.learningPaths.createLearningPath(adminToken, data));
 
       const json: LearningPath = await response.json();
       // eslint-disable-next-line playwright/no-conditional-in-test -- push only when the response has a video
@@ -120,7 +120,7 @@ test.describe("create learning path", () => {
   test(
     "API-170: admin creating a learning path with modules without position - should return 201 with positions in the sent order",
     { tag: "@regression" },
-    async ({ learningPathController, adminToken }) => {
+    async ({ apiClient, adminToken }) => {
       const modules = [
         buildLearningPathModuleData(),
         buildLearningPathModuleData(),
@@ -129,7 +129,7 @@ test.describe("create learning path", () => {
       const data = buildLearningPathData({ modules });
 
       const response = await test.step("admin creates a learning path", () =>
-        learningPathController.createLearningPath(adminToken, data));
+        apiClient.learningPaths.createLearningPath(adminToken, data));
 
       const json: LearningPath = await response.json();
 
@@ -151,18 +151,18 @@ test.describe("create learning path", () => {
   test(
     "API-171: admin creating a learning path with an existing title - should return 201 with a different slug",
     { tag: "@regression" },
-    async ({ learningPathController, adminToken }) => {
+    async ({ apiClient, adminToken }) => {
       const firstData = buildLearningPathData();
       const firstResponse =
         await test.step("precondition: admin creates a learning path", () =>
-          learningPathController.createLearningPath(adminToken, firstData));
+          apiClient.learningPaths.createLearningPath(adminToken, firstData));
       const firstPath: LearningPath = await firstResponse.json();
 
       const data = buildLearningPathData({ title: firstPath.title });
 
       const response =
         await test.step("admin creates a learning path with the same title", () =>
-          learningPathController.createLearningPath(adminToken, data));
+          apiClient.learningPaths.createLearningPath(adminToken, data));
 
       const json: LearningPath = await response.json();
 
@@ -194,8 +194,8 @@ test.describe("create learning path - negative scenarios", () => {
       `${id}: ${title} creating a learning path - should return ${status}`,
       { tag: "@regression" },
       async ({
-        rawLearningPathController,
-        youtubeVideoController,
+        rawApiClient,
+        apiClient,
         videoIdsToDelete,
         tokenFor,
       }) => {
@@ -206,7 +206,7 @@ test.describe("create learning path - negative scenarios", () => {
 
         const response =
           await test.step(`${title} creates a learning path`, () =>
-            rawLearningPathController.createLearningPath(token, data));
+            rawApiClient.learningPaths.createLearningPath(token, data));
 
         const json = await response.json();
         // eslint-disable-next-line playwright/no-conditional-in-test -- push only when the response has a video
@@ -222,7 +222,7 @@ test.describe("create learning path - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the video list", () =>
-            youtubeVideoController.getVideos());
+            apiClient.youtubeVideos.getVideos());
 
         const list: { title: string }[] = await listResponse.json();
 
@@ -243,12 +243,12 @@ test.describe("create learning path - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawLearningPathController, adminToken }) => {
+      async ({ rawApiClient, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin creates a learning path with ${title}`, () =>
-            rawLearningPathController.createLearningPath(adminToken, payload));
+            rawApiClient.learningPaths.createLearningPath(adminToken, payload));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -272,12 +272,12 @@ test.describe("create learning path - negative scenarios", () => {
           "the route passes categoryIds straight to prisma connect without a lookup and returns 500 for an unknown category id",
       },
     },
-    async ({ rawLearningPathController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const data = buildLearningPathData({ categoryIds: [""] });
 
       const response =
         await test.step("admin creates a learning path with an empty category id", () =>
-          rawLearningPathController.createLearningPath(adminToken, data));
+          rawApiClient.learningPaths.createLearningPath(adminToken, data));
 
       await test.step("status code is 4xx", () => {
         expect(response.status()).toBeGreaterThanOrEqual(400);

@@ -10,7 +10,7 @@ test.describe("create post", () => {
   test(
     "API-090: admin creating a published post with all fields and a tag - should return 201 and the published post",
     { tag: ["@regression", "@smoke"] },
-    async ({ postController, postIdsToDelete, createdTag, adminToken }) => {
+    async ({ apiClient, postIdsToDelete, createdTag, adminToken }) => {
       const data = buildPostData({
         tagIds: [createdTag.id],
         isPublished: true,
@@ -26,7 +26,7 @@ test.describe("create post", () => {
       };
 
       const response = await test.step("admin creates a published post", () =>
-        postController.createPost(adminToken, data));
+        apiClient.posts.createPost(adminToken, data));
 
       const json: Post = await response.json();
       postIdsToDelete.push(json.id);
@@ -50,7 +50,7 @@ test.describe("create post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -63,7 +63,7 @@ test.describe("create post", () => {
   test(
     "API-091: admin creating a post without isPublished - should return 201 and a draft that is not in the public list",
     { tag: "@regression" },
-    async ({ postController, postIdsToDelete, adminToken }) => {
+    async ({ apiClient, postIdsToDelete, adminToken }) => {
       const data = buildPostData({
         excerpt: undefined,
         content: undefined,
@@ -71,7 +71,7 @@ test.describe("create post", () => {
       });
 
       const response = await test.step("admin creates a post", () =>
-        postController.createPost(adminToken, data));
+        apiClient.posts.createPost(adminToken, data));
 
       const json: Post = await response.json();
       postIdsToDelete.push(json.id);
@@ -94,7 +94,7 @@ test.describe("create post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -107,7 +107,7 @@ test.describe("create post", () => {
   test(
     "API-092: admin creating a post with an existing title - should return 201 with a different slug",
     { tag: "@regression" },
-    async ({ postController, createPost, postIdsToDelete, adminToken }) => {
+    async ({ apiClient, createPost, postIdsToDelete, adminToken }) => {
       const firstPost = await createPost({ isPublished: true });
       const data = buildPostData({
         title: firstPost.title,
@@ -116,7 +116,7 @@ test.describe("create post", () => {
 
       const response =
         await test.step("admin creates a post with the same title", () =>
-          postController.createPost(adminToken, data));
+          apiClient.posts.createPost(adminToken, data));
 
       const json: Post = await response.json();
       postIdsToDelete.push(json.id);
@@ -136,7 +136,7 @@ test.describe("create post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -162,13 +162,13 @@ test.describe("create post - negative scenarios", () => {
     test(
       `${id}: ${title} creating a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, tokenFor }) => {
+      async ({ apiClient, rawApiClient, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const data = buildPostData({ isPublished: true });
 
         const response = await test.step(`${title} creates a post`, () =>
-          rawPostController.createPost(token, data));
+          rawApiClient.posts.createPost(token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -181,7 +181,7 @@ test.describe("create post - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the post list", () =>
-            postController.getPosts());
+            apiClient.posts.getPosts());
 
         const list: Post[] = await listResponse.json();
 
@@ -196,12 +196,12 @@ test.describe("create post - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawPostController, adminToken }) => {
+      async ({ rawApiClient, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin creates a post with ${title}`, () =>
-            rawPostController.createPost(adminToken, payload));
+            rawApiClient.posts.createPost(adminToken, payload));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

@@ -68,9 +68,9 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
 - _Types_ (`tests/app/types/`): base `XxxFields` type, derived via `Pick` / `Partial`; no `any`; no duplicated shapes.
 - _Data_ (`tests/app/test-data/<domain>-data.ts`): `buildXxxData()` builders with faker; uniqueness via `getRandomNumber()`; secrets from `process.env`, never hardcoded.
 - _Negative cases_ (`invalid-<flow>-data.ts`): array of `{ id, title, overrides | buildPayload, ... }` with a unique `API-NNN` id. New cases use `overrides` or `buildPayload: () => ...`, **not** a `payload` computed at import time.
-- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, `.json()` or logic**. Paths without leading `/`. Token via `headers: this.authHeaders(accessToken)`, never a hand-built `authorization` header.
+- _Controller_: `extends BaseController`; one method = one HTTP call; returns the raw `response`; **no assertions, `.json()` or logic**. Paths without leading `/`. Token via `headers: this.authHeaders(accessToken)`, never a hand-built `authorization` header. A new controller is a `readonly` field of `ApiClient` (`tests/app/api-client.ts`).
 - _Schema_ (`tests/app/json-schemas/`): `z.strictObject`; a `// Response body of METHOD /api/...` comment; exported `type Xxx = z.infer<...>`; fields match the real response.
-- _Fixtures_ (`tests/fixtures.ts`): added only when a precondition repeats. A new controller comes as a pair: `xxxController` (on `api`, throws on non-2xx) and `rawXxxController` (on `request`). Preconditions in `base.step("precondition: ...", ...)`. `Fixtures` type updated.
+- _Fixtures_ (`tests/fixtures.ts`): added only when a precondition repeats. A new controller needs no fixture: it is reached through `apiClient.xxx` (on `api`, throws on non-2xx) and `rawApiClient.xxx` (on `request`); a per-controller fixture is a finding. Preconditions in `base.step("precondition: ...", ...)`. `Fixtures` type updated.
 
 **Spec structure:**
 
@@ -85,9 +85,9 @@ If the user asks, or the change is small, also run the changed specs (`BASE_URL=
   - No `// Arrange` / `// Act` / `// Assert` comments.
 - Schema check exactly as `const result = xxxSchema.safeParse(json); expect(result.error?.issues ?? []).toEqual([]);`, once per endpoint in the `@smoke` test (unless the endpoint has different schemas, e.g. `courseDetailSchema` after `courseSchema`).
 - Value checks: **more than 2** fields of one body compared with expected values → **one** step with one `expect(json).toMatchObject({ ... })` (expected values built once, reused for response and follow-up GET). One or two fields may stay plain `toBe` / `toContain`. No `expect.soft`. A row of 3+ per-field `toBe` is a nit.
-- `xxxController` for Arrange and happy paths; `rawXxxController` for the request under test in negatives.
+- `apiClient.xxx` for Arrange and happy paths; `rawApiClient.xxx` for the request under test in negatives.
 - Negatives: a `for` loop over an array from `test-data/`; a single case with its own precondition (like `API-008`) is a standalone test in the same describe. Each asserts the status **and** the error field the route returns (`error`, `error_description`).
-- Status checks: `xxxController` throws on non-2xx, so `status code matches 200` in positives is redundant (flag it); any other success status (e.g. `201`) **must** be asserted. **Every** negative needs a `status code matches ${status}` step.
+- Status checks: `apiClient` throws on non-2xx, so `status code matches 200` in positives is redundant (flag it); any other success status (e.g. `201`) **must** be asserted. **Every** negative needs a `status code matches ${status}` step.
 - Tests are independent: each creates its own data; no seed data except `adminCredentials`; no ordering.
 
 **Test value** ("why does this test exist"):

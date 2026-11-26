@@ -10,10 +10,10 @@ test.describe("get courses list", () => {
   test(
     "API-033: anonymous user gets the catalog with default pagination - should return only published courses",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController }) => {
+    async ({ apiClient }) => {
       const response =
         await test.step("anonymous user requests the course list", () =>
-          courseController.getCourses());
+          apiClient.courses.getCourses());
 
       const json = await response.json();
 
@@ -42,12 +42,12 @@ test.describe("get courses list", () => {
     test(
       `${id}: ${title} - should not see a draft course in the list`,
       { tag: "@regression" },
-      async ({ courseController, draftCourse, tokenFor }) => {
+      async ({ apiClient, draftCourse, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response =
           await test.step(`${title} searches for the draft course`, () =>
-            courseController.getCourses({ search: draftCourse.title }, token));
+            apiClient.courses.getCourses({ search: draftCourse.title }, token));
 
         const json = await response.json();
 
@@ -62,10 +62,10 @@ test.describe("get courses list", () => {
   test(
     "API-037: admin should see a draft course in the list",
     { tag: "@regression" },
-    async ({ courseController, draftCourse, adminToken }) => {
+    async ({ apiClient, draftCourse, adminToken }) => {
       const response =
         await test.step("admin searches for the draft course", () =>
-          courseController.getCourses(
+          apiClient.courses.getCourses(
             { search: draftCourse.title },
             adminToken,
           ));
@@ -83,15 +83,15 @@ test.describe("get courses list", () => {
   test(
     "API-038: published course should appear in the list for anonymous user",
     { tag: "@regression" },
-    async ({ courseController, draftCourse, adminToken }) => {
+    async ({ apiClient, draftCourse, adminToken }) => {
       await test.step("precondition: admin publishes the course", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, {
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, {
           isPublished: true,
         }));
 
       const response =
         await test.step("anonymous user searches for the course", () =>
-          courseController.getCourses({ search: draftCourse.title }));
+          apiClient.courses.getCourses({ search: draftCourse.title }));
 
       const json = await response.json();
 
@@ -106,7 +106,7 @@ test.describe("get courses list", () => {
   test(
     "API-039: page and limit should split results without loss or overlap",
     { tag: "@regression" },
-    async ({ courseController, createDraftCourse, adminToken }) => {
+    async ({ apiClient, createDraftCourse, adminToken }) => {
       const token = buildSearchToken();
       const first = await createDraftCourse({ title: `${token} 1` });
       const second = await createDraftCourse({ title: `${token} 2` });
@@ -114,7 +114,7 @@ test.describe("get courses list", () => {
 
       const page1Response =
         await test.step("admin requests page 1 with limit 2", () =>
-          courseController.getCourses(
+          apiClient.courses.getCourses(
             { search: token, page: 1, limit: 2 },
             adminToken,
           ));
@@ -122,7 +122,7 @@ test.describe("get courses list", () => {
 
       const page2Response =
         await test.step("admin requests page 2 with limit 2", () =>
-          courseController.getCourses(
+          apiClient.courses.getCourses(
             { search: token, page: 2, limit: 2 },
             adminToken,
           ));
@@ -148,15 +148,15 @@ test.describe("get courses list", () => {
   test(
     "API-040: category filter should return only courses of that category",
     { tag: "@regression" },
-    async ({ courseController, draftCourse, createdCategory, adminToken }) => {
+    async ({ apiClient, draftCourse, createdCategory, adminToken }) => {
       await test.step("precondition: admin links the course to the category", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, {
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, {
           categoryIds: [createdCategory.id],
         }));
 
       const response =
         await test.step("admin filters the list by category slug", () =>
-          courseController.getCourses(
+          apiClient.courses.getCourses(
             { category: createdCategory.slug },
             adminToken,
           ));
@@ -176,18 +176,18 @@ test.describe("get courses list", () => {
   test(
     "API-041: search should match courses by title and by description",
     { tag: "@regression" },
-    async ({ courseController, createDraftCourse, adminToken }) => {
+    async ({ apiClient, createDraftCourse, adminToken }) => {
       const token = buildSearchToken();
       const titleMatch = await createDraftCourse({ title: `${token} title` });
       const descriptionMatch = await createDraftCourse();
 
       await test.step("precondition: admin adds the search token to the description", () =>
-        courseController.updateCourse(descriptionMatch.id, adminToken, {
+        apiClient.courses.updateCourse(descriptionMatch.id, adminToken, {
           description: `Description with ${token}`,
         }));
 
       const response = await test.step("admin searches by the token", () =>
-        courseController.getCourses({ search: token }, adminToken));
+        apiClient.courses.getCourses({ search: token }, adminToken));
 
       const json: CoursesPage = await response.json();
 

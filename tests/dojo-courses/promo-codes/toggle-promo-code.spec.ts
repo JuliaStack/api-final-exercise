@@ -12,7 +12,7 @@ test.describe("toggle promo code", () => {
     "API-148: admin toggling an active promo code - should deactivate it and keep the other fields",
     { tag: ["@regression", "@smoke"] },
     async ({
-      promoCodeController,
+      apiClient,
       createPromoCode,
       draftCourse,
       adminToken,
@@ -28,7 +28,7 @@ test.describe("toggle promo code", () => {
       };
 
       const response = await test.step("admin toggles the promo code", () =>
-        promoCodeController.togglePromoCode(draftCourse.id, id, adminToken));
+        apiClient.promoCodes.togglePromoCode(draftCourse.id, id, adminToken));
 
       const json = await response.json();
 
@@ -43,7 +43,7 @@ test.describe("toggle promo code", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -58,7 +58,7 @@ test.describe("toggle promo code", () => {
     "API-149: admin toggling a deactivated promo code - should activate it again",
     { tag: "@regression" },
     async ({
-      promoCodeController,
+      apiClient,
       createPromoCode,
       draftCourse,
       adminToken,
@@ -66,11 +66,11 @@ test.describe("toggle promo code", () => {
       const { id } = await createPromoCode(draftCourse.id);
 
       await test.step("precondition: admin deactivates the promo code", () =>
-        promoCodeController.togglePromoCode(draftCourse.id, id, adminToken));
+        apiClient.promoCodes.togglePromoCode(draftCourse.id, id, adminToken));
 
       const response =
         await test.step("admin toggles the promo code again", () =>
-          promoCodeController.togglePromoCode(draftCourse.id, id, adminToken));
+          apiClient.promoCodes.togglePromoCode(draftCourse.id, id, adminToken));
 
       const json = await response.json();
 
@@ -80,7 +80,7 @@ test.describe("toggle promo code", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -104,8 +104,8 @@ test.describe("toggle promo code - negative scenarios", () => {
       `${id}: ${title} toggling a promo code - should return ${status}`,
       { tag: "@regression" },
       async ({
-        promoCodeController,
-        rawPromoCodeController,
+        apiClient,
+        rawApiClient,
         createPromoCode,
         draftCourse,
         adminToken,
@@ -117,7 +117,7 @@ test.describe("toggle promo code - negative scenarios", () => {
 
         const response =
           await test.step(`${title} toggles the promo code`, () =>
-            rawPromoCodeController.togglePromoCode(
+            rawApiClient.promoCodes.togglePromoCode(
               draftCourse.id,
               promoCodeId,
               token,
@@ -134,7 +134,7 @@ test.describe("toggle promo code - negative scenarios", () => {
 
         const listResponse =
           await test.step("admin requests the promo codes of the course", () =>
-            promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+            apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
         const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -149,10 +149,10 @@ test.describe("toggle promo code - negative scenarios", () => {
   test(
     "API-153: admin toggling a non-existing promo code - should return 404",
     { tag: "@regression" },
-    async ({ rawPromoCodeController, draftCourse, adminToken }) => {
+    async ({ rawApiClient, draftCourse, adminToken }) => {
       const response =
         await test.step("admin toggles a non-existing promo code", () =>
-          rawPromoCodeController.togglePromoCode(
+          rawApiClient.promoCodes.togglePromoCode(
             draftCourse.id,
             nonExistingPromoCodeId,
             adminToken,
@@ -180,8 +180,8 @@ test.describe("toggle promo code - negative scenarios", () => {
       },
     },
     async ({
-      promoCodeController,
-      rawPromoCodeController,
+      apiClient,
+      rawApiClient,
       createPromoCode,
       createDraftCourse,
       draftCourse,
@@ -192,7 +192,7 @@ test.describe("toggle promo code - negative scenarios", () => {
 
       const response =
         await test.step("admin toggles the promo code through another course", () =>
-          rawPromoCodeController.togglePromoCode(
+          rawApiClient.promoCodes.togglePromoCode(
             otherCourse.id,
             id,
             adminToken,
@@ -204,7 +204,7 @@ test.describe("toggle promo code - negative scenarios", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the owning course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 

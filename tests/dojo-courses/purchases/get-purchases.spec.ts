@@ -10,19 +10,18 @@ test.describe("get purchases", () => {
     "API-124: user who bought a course - should see it in their purchases with amount and course card",
     { tag: ["@regression", "@smoke"] },
     async ({
-      courseController,
-      purchaseController,
+      apiClient,
       publishedCourse,
       registeredUser,
       userToken,
     }) => {
       const purchaseResponse =
         await test.step("precondition: user purchases the course", () =>
-          courseController.purchaseCourse(publishedCourse.id, userToken));
+          apiClient.courses.purchaseCourse(publishedCourse.id, userToken));
       const purchase = await purchaseResponse.json();
 
       const response = await test.step("user requests their purchases", () =>
-        purchaseController.getPurchases(userToken));
+        apiClient.purchases.getPurchases(userToken));
 
       const json: PurchaseList = await response.json();
 
@@ -57,17 +56,16 @@ test.describe("get purchases", () => {
     "API-125: user without purchases - should not see purchases of another account",
     { tag: "@regression" },
     async ({
-      courseController,
-      purchaseController,
+      apiClient,
       publishedCourse,
       adminToken,
       userToken,
     }) => {
       await test.step("precondition: admin purchases the course", () =>
-        courseController.purchaseCourse(publishedCourse.id, adminToken));
+        apiClient.courses.purchaseCourse(publishedCourse.id, adminToken));
 
       const response = await test.step("user requests their purchases", () =>
-        purchaseController.getPurchases(userToken));
+        apiClient.purchases.getPurchases(userToken));
 
       const json: PurchaseList = await response.json();
 
@@ -89,12 +87,12 @@ test.describe("get purchases - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawPurchaseController, tokenFor }) => {
+      async ({ rawApiClient, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response =
           await test.step(`request purchases with ${title}`, () =>
-            rawPurchaseController.getPurchases(token));
+            rawApiClient.purchases.getPurchases(token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

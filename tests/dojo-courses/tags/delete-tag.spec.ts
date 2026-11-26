@@ -7,14 +7,14 @@ test.describe("delete tag", () => {
   test(
     "API-086: admin deleting an existing tag - should return 200 and remove the tag",
     { tag: ["@regression", "@smoke"] },
-    async ({ tagController, adminToken }) => {
+    async ({ apiClient, adminToken }) => {
       const createResponse =
         await test.step("precondition: admin creates a tag", () =>
-          tagController.createTag(adminToken, buildTagData()));
+          apiClient.tags.createTag(adminToken, buildTagData()));
       const tag: CreatedTag = await createResponse.json();
 
       const response = await test.step("admin deletes the tag", () =>
-        tagController.deleteTag(tag.id, adminToken));
+        apiClient.tags.deleteTag(tag.id, adminToken));
 
       const json = await response.json();
 
@@ -24,7 +24,7 @@ test.describe("delete tag", () => {
 
       const listResponse =
         await test.step("anonymous user requests the tag list", () =>
-          tagController.getTags());
+          apiClient.tags.getTags());
 
       const list: CreatedTag[] = await listResponse.json();
 
@@ -46,11 +46,11 @@ test.describe("delete tag - negative scenarios", () => {
     test(
       `${id}: ${title} deleting a tag - should return ${status}`,
       { tag: "@regression" },
-      async ({ tagController, rawTagController, createdTag, tokenFor }) => {
+      async ({ apiClient, rawApiClient, createdTag, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const response = await test.step(`${title} deletes the tag`, () =>
-          rawTagController.deleteTag(createdTag.id, token));
+          rawApiClient.tags.deleteTag(createdTag.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -63,7 +63,7 @@ test.describe("delete tag - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the tag list", () =>
-            tagController.getTags());
+            apiClient.tags.getTags());
 
         const list: CreatedTag[] = await listResponse.json();
 
@@ -84,9 +84,9 @@ test.describe("delete tag - negative scenarios", () => {
           "the route calls prisma.tag.delete without a lookup and returns 500 for a missing id",
       },
     },
-    async ({ rawTagController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const response = await test.step("admin deletes a non-existing tag", () =>
-        rawTagController.deleteTag(nonExistingTagId, adminToken));
+        rawApiClient.tags.deleteTag(nonExistingTagId, adminToken));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

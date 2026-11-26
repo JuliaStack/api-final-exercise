@@ -12,11 +12,11 @@ test.describe("create tag", () => {
   test(
     "API-078: admin creating a tag with a valid name - should return 201 and the created tag",
     { tag: ["@regression", "@smoke"] },
-    async ({ tagController, tagIdsToDelete, adminToken }) => {
+    async ({ apiClient, tagIdsToDelete, adminToken }) => {
       const data = buildTagData();
 
       const response = await test.step("admin creates a tag", () =>
-        tagController.createTag(adminToken, data));
+        apiClient.tags.createTag(adminToken, data));
 
       const json: CreatedTag = await response.json();
       tagIdsToDelete.push(json.id);
@@ -37,7 +37,7 @@ test.describe("create tag", () => {
 
       const listResponse =
         await test.step("anonymous user requests the tag list", () =>
-          tagController.getTags());
+          apiClient.tags.getTags());
 
       const list: CreatedTag[] = await listResponse.json();
 
@@ -59,13 +59,13 @@ test.describe("create tag - negative scenarios", () => {
     test(
       `${id}: ${title} creating a tag - should return ${status}`,
       { tag: "@regression" },
-      async ({ tagController, rawTagController, tokenFor }) => {
+      async ({ apiClient, rawApiClient, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const data = buildTagData();
 
         const response = await test.step(`${title} creates a tag`, () =>
-          rawTagController.createTag(token, data));
+          rawApiClient.tags.createTag(token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -78,7 +78,7 @@ test.describe("create tag - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the tag list", () =>
-            tagController.getTags());
+            apiClient.tags.getTags());
 
         const list: CreatedTag[] = await listResponse.json();
 
@@ -93,12 +93,12 @@ test.describe("create tag - negative scenarios", () => {
     test(
       `${id}: admin creating a tag with the ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ tagController, rawTagController, createdTag, adminToken }) => {
+      async ({ apiClient, rawApiClient, createdTag, adminToken }) => {
         const data = buildTagData({ name: buildName(createdTag) });
 
         const response =
           await test.step(`admin creates a tag with the ${title}`, () =>
-            rawTagController.createTag(adminToken, data));
+            rawApiClient.tags.createTag(adminToken, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -111,7 +111,7 @@ test.describe("create tag - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the tag list", () =>
-            tagController.getTags());
+            apiClient.tags.getTags());
 
         const list: CreatedTag[] = await listResponse.json();
 
@@ -128,12 +128,12 @@ test.describe("create tag - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawTagController, adminToken }) => {
+      async ({ rawApiClient, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin creates a tag with ${title}`, () =>
-            rawTagController.createTag(adminToken, payload));
+            rawApiClient.tags.createTag(adminToken, payload));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

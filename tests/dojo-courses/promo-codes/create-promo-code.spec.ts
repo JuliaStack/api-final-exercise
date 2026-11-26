@@ -12,7 +12,7 @@ test.describe("create promo code", () => {
   test(
     "API-129: admin creating a promo code with all fields - should return 201 and the stored promo code",
     { tag: ["@regression", "@smoke"] },
-    async ({ promoCodeController, draftCourse, adminToken }) => {
+    async ({ apiClient, draftCourse, adminToken }) => {
       const data = buildPromoCodeData();
       const expectedFields = {
         ...data,
@@ -22,7 +22,7 @@ test.describe("create promo code", () => {
       };
 
       const response = await test.step("admin creates a promo code", () =>
-        promoCodeController.createPromoCode(draftCourse.id, adminToken, data));
+        apiClient.promoCodes.createPromoCode(draftCourse.id, adminToken, data));
 
       await test.step("status code matches 201", () => {
         expect(response.status()).toBe(201);
@@ -41,7 +41,7 @@ test.describe("create promo code", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -55,12 +55,12 @@ test.describe("create promo code", () => {
   test(
     "API-130: admin creating a promo code without maxUses - should return 201 with unlimited uses",
     { tag: "@regression" },
-    async ({ promoCodeController, draftCourse, adminToken }) => {
+    async ({ apiClient, draftCourse, adminToken }) => {
       const data = buildPromoCodeData({ maxUses: undefined });
 
       const response =
         await test.step("admin creates a promo code without maxUses", () =>
-          promoCodeController.createPromoCode(
+          apiClient.promoCodes.createPromoCode(
             draftCourse.id,
             adminToken,
             data,
@@ -95,8 +95,8 @@ test.describe("create promo code - negative scenarios", () => {
       `${id}: ${title} creating a promo code - should return ${status}`,
       { tag: "@regression" },
       async ({
-        promoCodeController,
-        rawPromoCodeController,
+        apiClient,
+        rawApiClient,
         draftCourse,
         adminToken,
         tokenFor,
@@ -106,7 +106,7 @@ test.describe("create promo code - negative scenarios", () => {
         const data = buildPromoCodeData();
 
         const response = await test.step(`${title} creates a promo code`, () =>
-          rawPromoCodeController.createPromoCode(draftCourse.id, token, data));
+          rawApiClient.promoCodes.createPromoCode(draftCourse.id, token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -119,7 +119,7 @@ test.describe("create promo code - negative scenarios", () => {
 
         const listResponse =
           await test.step("admin requests the promo codes of the course", () =>
-            promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+            apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
         const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -133,12 +133,12 @@ test.describe("create promo code - negative scenarios", () => {
   test(
     "API-134: admin creating a promo code for a non-existing course - should return 404",
     { tag: "@regression" },
-    async ({ rawPromoCodeController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const data = buildPromoCodeData();
 
       const response =
         await test.step("admin creates a promo code for a non-existing course", () =>
-          rawPromoCodeController.createPromoCode(
+          rawApiClient.promoCodes.createPromoCode(
             nonExistingCourseId,
             adminToken,
             data,
@@ -159,8 +159,8 @@ test.describe("create promo code - negative scenarios", () => {
     "API-135: admin creating a promo code with an existing code - should return 409 and keep the original",
     { tag: "@regression" },
     async ({
-      promoCodeController,
-      rawPromoCodeController,
+      apiClient,
+      rawApiClient,
       draftCourse,
       adminToken,
     }) => {
@@ -169,7 +169,7 @@ test.describe("create promo code - negative scenarios", () => {
 
       const originalResponse =
         await test.step("precondition: admin creates a promo code", () =>
-          promoCodeController.createPromoCode(
+          apiClient.promoCodes.createPromoCode(
             draftCourse.id,
             adminToken,
             data,
@@ -178,7 +178,7 @@ test.describe("create promo code - negative scenarios", () => {
 
       const response =
         await test.step("admin creates a promo code with the same code", () =>
-          rawPromoCodeController.createPromoCode(
+          rawApiClient.promoCodes.createPromoCode(
             draftCourse.id,
             adminToken,
             duplicateData,
@@ -197,7 +197,7 @@ test.describe("create promo code - negative scenarios", () => {
 
       const listResponse =
         await test.step("admin requests the promo codes of the course", () =>
-          promoCodeController.getPromoCodes(draftCourse.id, adminToken));
+          apiClient.promoCodes.getPromoCodes(draftCourse.id, adminToken));
 
       const list: PromoCodeListItem[] = await listResponse.json();
 
@@ -218,12 +218,12 @@ test.describe("create promo code - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawPromoCodeController, draftCourse, adminToken }) => {
+      async ({ rawApiClient, draftCourse, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin creates a promo code with ${title}`, () =>
-            rawPromoCodeController.createPromoCode(
+            rawApiClient.promoCodes.createPromoCode(
               draftCourse.id,
               adminToken,
               payload,

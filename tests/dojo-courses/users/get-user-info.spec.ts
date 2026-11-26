@@ -6,9 +6,9 @@ test.describe("get registered user info", () => {
   test(
     "API-010: registered user should receive info",
     { tag: ["@regression", "@smoke"] },
-    async ({ userController, registeredUser, userToken }) => {
+    async ({ apiClient, registeredUser, userToken }) => {
       const response = await test.step("request user info", () =>
-        userController.getUserInfo(userToken));
+        apiClient.users.getUserInfo(userToken));
 
       const json = await response.json();
 
@@ -33,10 +33,10 @@ test.describe("get user info - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawUserController }) => {
+      async ({ rawApiClient }) => {
         const response =
           await test.step(`request user info with ${title}`, () =>
-            rawUserController.getUserInfo(token));
+            rawApiClient.users.getUserInfo(token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

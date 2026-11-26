@@ -7,11 +7,11 @@ test.describe("register a new user", () => {
   test(
     "API-001: register user - should return registered user",
     { tag: ["@regression", "@smoke"] },
-    async ({ userController }) => {
+    async ({ apiClient }) => {
       const payload = buildUserData();
 
       const response = await test.step("successful user registration", () =>
-        userController.registerUser(payload));
+        apiClient.users.registerUser(payload));
 
       await test.step("status code matches 201", () => {
         expect(response.status()).toBe(201);
@@ -40,10 +40,10 @@ test.describe("register a new user - negative scenarios", () => {
     test(
       `${id}: ${title} - should return 400`,
       { tag: "@regression" },
-      async ({ rawUserController }) => {
+      async ({ rawApiClient }) => {
         const response =
           await test.step(`user registration with ${title}`, () =>
-            rawUserController.registerUser(payload));
+            rawApiClient.users.registerUser(payload));
 
         await test.step("status code matches 400", () => {
           expect(response.status()).toBe(400);
@@ -60,14 +60,14 @@ test.describe("register a new user - negative scenarios", () => {
   test(
     "API-008: existing user - should return 409",
     { tag: "@regression" },
-    async ({ userController, rawUserController }) => {
+    async ({ apiClient, rawApiClient }) => {
       const payload = buildUserData();
 
       await test.step("precondition: successful user registration", () =>
-        userController.registerUser(payload));
+        apiClient.users.registerUser(payload));
 
       const response = await test.step("existing user registration", () =>
-        rawUserController.registerUser(payload));
+        rawApiClient.users.registerUser(payload));
 
       await test.step("status code matches 409", () => {
         expect(response.status()).toBe(409);

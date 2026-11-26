@@ -6,7 +6,7 @@ test.describe("get posts list", () => {
   test(
     "API-098: anonymous user gets the post feed - should return only published posts with their tags",
     { tag: ["@regression", "@smoke"] },
-    async ({ postController, createPost, createdTag }) => {
+    async ({ apiClient, createPost, createdTag }) => {
       const post = await createPost({
         isPublished: true,
         tagIds: [createdTag.id],
@@ -14,7 +14,7 @@ test.describe("get posts list", () => {
 
       const response =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const json: PostList = await response.json();
 
@@ -43,13 +43,13 @@ test.describe("get posts list", () => {
   test(
     "API-099: post feed - should be sorted by publish date descending",
     { tag: "@regression" },
-    async ({ postController, createPost }) => {
+    async ({ apiClient, createPost }) => {
       const older = await createPost({ isPublished: true });
       const newer = await createPost({ isPublished: true });
 
       const response =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const json: PostList = await response.json();
 
@@ -71,12 +71,12 @@ test.describe("get posts list", () => {
   test(
     "API-100: user with an expired token - should still get the post feed",
     { tag: "@regression" },
-    async ({ postController, createPost }) => {
+    async ({ apiClient, createPost }) => {
       const post = await createPost({ isPublished: true });
 
       const response =
         await test.step("user with an expired token requests the post list", () =>
-          postController.getPosts(expiredToken));
+          apiClient.posts.getPosts(expiredToken));
 
       const json: PostList = await response.json();
 

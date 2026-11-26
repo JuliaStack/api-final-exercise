@@ -1,15 +1,7 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { test as base, expect, APIRequestContext } from "@playwright/test";
-import { CategoryController } from "./app/controllers/category-controller";
-import { CourseController } from "./app/controllers/course-controller";
-import { LearningPathController } from "./app/controllers/learning-path-controller";
-import { PostController } from "./app/controllers/post-controller";
-import { PromoCodeController } from "./app/controllers/promo-code-controller";
-import { PurchaseController } from "./app/controllers/purchase-controller";
-import { TagController } from "./app/controllers/tag-controller";
-import { UserController } from "./app/controllers/user-controller";
-import { YoutubeVideoController } from "./app/controllers/youtube-video-controller";
+import { ApiClient } from "./app/api-client";
 import type {
   CourseWithChapters,
   CreatedCategory,
@@ -67,22 +59,20 @@ async function deleteEach(
 }
 
 export type Fixtures = {
-  // Request context that throws on any non-2xx/3xx response.
-  // Use it for Arrange steps and happy paths; use the default `request`
-  // fixture for the request under test in negative scenarios.
+  // Request context that throws on any non-2xx/3xx response; `apiClient` runs on it.
   // baseURL and extraHTTPHeaders come from the current project's `use` config.
   api: APIRequestContext;
-  userController: UserController;
-  rawUserController: UserController;
+  // All controllers on `api`: throws on non-2xx. Use it for Arrange steps and happy paths.
+  apiClient: ApiClient;
+  // All controllers on the default `request`: never throws.
+  // Use it for the request under test in negative scenarios.
+  rawApiClient: ApiClient;
   registeredUser: CreatedUser;
   userToken: string;
   // Returns the Authorization token for a caller (undefined = no header).
   // A user is registered only for "regularUser", so the other cases stay cheap.
   tokenFor: (caller: Caller) => Promise<string | undefined>;
   adminToken: string;
-  courseController: CourseController;
-  rawCourseController: CourseController;
-  categoryController: CategoryController;
   // Ids pushed here are deleted as admin in teardown, even if the test fails.
   courseIdsToDelete: string[];
   // Creates a draft course as admin; every created course is deleted in teardown.
@@ -97,34 +87,23 @@ export type Fixtures = {
   // A published course with a known price (`purchasableCoursePrice`), ready to be bought.
   // It is the same course as `draftCourse` and `courseWithChapters`.
   publishedCourse: PublishedCourse;
-  purchaseController: PurchaseController;
-  rawPurchaseController: PurchaseController;
   // Creates a category as admin; every created category is deleted in teardown.
   createCategory: () => Promise<CreatedCategory>;
   createdCategory: CreatedCategory;
-  tagController: TagController;
-  rawTagController: TagController;
   // Ids pushed here are deleted as admin in teardown, even if the test fails.
   tagIdsToDelete: string[];
   // Creates a tag as admin; every created tag is deleted in teardown.
   createTag: (overrides?: Partial<CreateTagData>) => Promise<CreatedTag>;
   createdTag: CreatedTag;
-  postController: PostController;
-  rawPostController: PostController;
   // Ids pushed here are deleted as admin in teardown, even if the test fails.
   postIdsToDelete: string[];
   // Creates a post as admin; every created post is deleted in teardown.
   createPost: (overrides?: Partial<CreatePostData>) => Promise<CreatedPost>;
-  promoCodeController: PromoCodeController;
-  rawPromoCodeController: PromoCodeController;
   // Creates a promo code as admin; it goes away with its course (cascade), so there is no teardown.
   createPromoCode: (
     courseId: string,
     overrides?: Partial<CreatePromoCodeData>,
   ) => Promise<CreatedPromoCode>;
-  learningPathController: LearningPathController;
-  rawLearningPathController: LearningPathController;
-  youtubeVideoController: YoutubeVideoController;
   // Video ids pushed here are deleted as admin in teardown, even if the test fails.
   // Learning paths themselves cannot be deleted through the API.
   videoIdsToDelete: string[];
@@ -140,45 +119,45 @@ export const test = base.extend<Fixtures>({
     await api.dispose();
   },
 
-  userController: async ({ api }, use) => {
-    await use(new UserController(api));
+  apiClient: async ({ api }, use) => {
+    await use(new ApiClient(api));
   },
 
-  rawUserController: async ({ request }, use) => {
-    await use(new UserController(request));
+  rawApiClient: async ({ request }, use) => {
+    await use(new ApiClient(request));
   },
 
-  registeredUser: async ({ userController }, use) => {
+  registeredUser: async ({ apiClient }, use) => {
     const user = buildUserData();
     const response = await base.step("precondition: register a new user", () =>
-      userController.registerUser(user),
+      apiClient.users.registerUser(user),
     );
     const { id } = await response.json();
 
     await use({ ...user, id });
   },
 
-  userToken: async ({ userController, registeredUser }, use) => {
+  userToken: async ({ apiClient, registeredUser }, use) => {
     const response = await base.step(
       "precondition: get user access token",
-      () => userController.getToken(buildTokenRequestData(registeredUser)),
+      () => apiClient.users.getToken(buildTokenRequestData(registeredUser)),
     );
     const { access_token: userToken } = await response.json();
     await use(userToken);
   },
 
-  tokenFor: async ({ userController }, use) => {
+  tokenFor: async ({ apiClient }, use) => {
     await use(async (caller) => {
       if (caller === "anonymous") return undefined;
       if (caller === "expiredToken") return expiredToken;
 
       const user = buildUserData();
       await base.step("precondition: register a new user", () =>
-        userController.registerUser(user),
+        apiClient.users.registerUser(user),
       );
       const response = await base.step(
         "precondition: get user access token",
-        () => userController.getToken(buildTokenRequestData(user)),
+        () => apiClient.users.getToken(buildTokenRequestData(user)),
       );
       const { access_token } = await response.json();
       return access_token as string;
@@ -188,7 +167,7 @@ export const test = base.extend<Fixtures>({
   // The admin token is requested in global setup and stored in a file;
   // it lives 15 minutes, so when it has expired (e.g. the IDE skipped global
   // setup) a fresh one is requested and written back to the file.
-  adminToken: async ({ userController }, use) => {
+  adminToken: async ({ apiClient }, use) => {
     let adminToken: string | undefined;
     try {
       adminToken = JSON.parse(
@@ -201,7 +180,7 @@ export const test = base.extend<Fixtures>({
       adminToken = await base.step(
         "precondition: admin access token is missing or expired, request a new one",
         async () => {
-          const response = await userController.getToken(
+          const response = await apiClient.users.getToken(
             buildTokenRequestData(adminCredentials),
           );
           const { access_token } = await response.json();
@@ -217,35 +196,23 @@ export const test = base.extend<Fixtures>({
     await use(adminToken);
   },
 
-  courseController: async ({ api }, use) => {
-    await use(new CourseController(api));
-  },
-
-  rawCourseController: async ({ request }, use) => {
-    await use(new CourseController(request));
-  },
-
-  categoryController: async ({ api }, use) => {
-    await use(new CategoryController(api));
-  },
-
-  courseIdsToDelete: async ({ courseController, adminToken }, use) => {
+  courseIdsToDelete: async ({ apiClient, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
     await deleteEach(ids, (id) =>
-      courseController.deleteCourse(id, adminToken),
+      apiClient.courses.deleteCourse(id, adminToken),
     );
   },
 
   createDraftCourse: async (
-    { courseController, adminToken, courseIdsToDelete },
+    { apiClient, adminToken, courseIdsToDelete },
     use,
   ) => {
     await use(async (overrides) => {
       const data = buildCourseData(overrides);
       const response = await base.step(
         "precondition: admin creates a draft course",
-        () => courseController.createCourse(adminToken, data),
+        () => apiClient.courses.createCourse(adminToken, data),
       );
       const { id, slug } = await response.json();
       courseIdsToDelete.push(id);
@@ -258,14 +225,14 @@ export const test = base.extend<Fixtures>({
   },
 
   courseWithChapters: async (
-    { courseController, adminToken, draftCourse },
+    { apiClient, adminToken, draftCourse },
     use,
   ) => {
     const addChapter = async (): Promise<CreatedChapter> => {
       const data = buildChapterData();
       const response = await base.step(
         "precondition: admin adds a chapter to the course",
-        () => courseController.createChapter(draftCourse.id, adminToken, data),
+        () => apiClient.courses.createChapter(draftCourse.id, adminToken, data),
       );
       const { id } = await response.json();
       return { id, title: data.title };
@@ -274,7 +241,7 @@ export const test = base.extend<Fixtures>({
     const publishedChapter = await addChapter();
     const draftChapter = await addChapter();
     await base.step("precondition: admin publishes the first chapter", () =>
-      courseController.updateChapter(
+      apiClient.courses.updateChapter(
         draftCourse.id,
         publishedChapter.id,
         adminToken,
@@ -286,14 +253,14 @@ export const test = base.extend<Fixtures>({
   },
 
   publishableCourse: async (
-    { courseController, adminToken, courseWithChapters },
+    { apiClient, adminToken, courseWithChapters },
     use,
   ) => {
     const { course } = courseWithChapters;
     const response = await base.step(
       "precondition: admin fills in all content fields of the course",
       () =>
-        courseController.updateCourse(
+        apiClient.courses.updateCourse(
           course.id,
           adminToken,
           buildUpdateCourseData(),
@@ -305,14 +272,14 @@ export const test = base.extend<Fixtures>({
   },
 
   publishedCourse: async (
-    { courseController, adminToken, courseWithChapters },
+    { apiClient, adminToken, courseWithChapters },
     use,
   ) => {
     const { course } = courseWithChapters;
     const response = await base.step(
       "precondition: admin fills in all content fields of the course",
       () =>
-        courseController.updateCourse(
+        apiClient.courses.updateCourse(
           course.id,
           adminToken,
           buildUpdateCourseData({ price: purchasableCoursePrice }),
@@ -321,34 +288,26 @@ export const test = base.extend<Fixtures>({
     const { id, title, slug, imageUrl } = await response.json();
 
     await base.step("precondition: admin publishes the course", () =>
-      courseController.publishCourse(id, adminToken),
+      apiClient.courses.publishCourse(id, adminToken),
     );
 
     await use({ id, title, slug, imageUrl, price: purchasableCoursePrice });
   },
 
-  purchaseController: async ({ api }, use) => {
-    await use(new PurchaseController(api));
-  },
-
-  rawPurchaseController: async ({ request }, use) => {
-    await use(new PurchaseController(request));
-  },
-
-  createCategory: async ({ categoryController, adminToken }, use) => {
+  createCategory: async ({ apiClient, adminToken }, use) => {
     const ids: string[] = [];
     await use(async () => {
       const response = await base.step(
         "precondition: admin creates a category",
         () =>
-          categoryController.createCategory(adminToken, buildCategoryData()),
+          apiClient.categories.createCategory(adminToken, buildCategoryData()),
       );
       const { id, slug } = await response.json();
       ids.push(id);
       return { id, slug };
     });
     await deleteEach(ids, (id) =>
-      categoryController.deleteCategory(id, adminToken),
+      apiClient.categories.deleteCategory(id, adminToken),
     );
   },
 
@@ -356,25 +315,17 @@ export const test = base.extend<Fixtures>({
     await use(await createCategory());
   },
 
-  tagController: async ({ api }, use) => {
-    await use(new TagController(api));
-  },
-
-  rawTagController: async ({ request }, use) => {
-    await use(new TagController(request));
-  },
-
-  tagIdsToDelete: async ({ tagController, adminToken }, use) => {
+  tagIdsToDelete: async ({ apiClient, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
-    await deleteEach(ids, (id) => tagController.deleteTag(id, adminToken));
+    await deleteEach(ids, (id) => apiClient.tags.deleteTag(id, adminToken));
   },
 
-  createTag: async ({ tagController, adminToken, tagIdsToDelete }, use) => {
+  createTag: async ({ apiClient, adminToken, tagIdsToDelete }, use) => {
     await use(async (overrides) => {
       const response = await base.step(
         "precondition: admin creates a tag",
-        () => tagController.createTag(adminToken, buildTagData(overrides)),
+        () => apiClient.tags.createTag(adminToken, buildTagData(overrides)),
       );
       const tag: CreatedTag = await response.json();
       tagIdsToDelete.push(tag.id);
@@ -386,26 +337,18 @@ export const test = base.extend<Fixtures>({
     await use(await createTag());
   },
 
-  postController: async ({ api }, use) => {
-    await use(new PostController(api));
-  },
-
-  rawPostController: async ({ request }, use) => {
-    await use(new PostController(request));
-  },
-
-  postIdsToDelete: async ({ postController, adminToken }, use) => {
+  postIdsToDelete: async ({ apiClient, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
-    await deleteEach(ids, (id) => postController.deletePost(id, adminToken));
+    await deleteEach(ids, (id) => apiClient.posts.deletePost(id, adminToken));
   },
 
-  createPost: async ({ postController, adminToken, postIdsToDelete }, use) => {
+  createPost: async ({ apiClient, adminToken, postIdsToDelete }, use) => {
     await use(async (overrides) => {
       const data = buildPostData(overrides);
       const response = await base.step(
         "precondition: admin creates a post",
-        () => postController.createPost(adminToken, data),
+        () => apiClient.posts.createPost(adminToken, data),
       );
       const { id, slug } = await response.json();
       postIdsToDelete.push(id);
@@ -413,20 +356,12 @@ export const test = base.extend<Fixtures>({
     });
   },
 
-  promoCodeController: async ({ api }, use) => {
-    await use(new PromoCodeController(api));
-  },
-
-  rawPromoCodeController: async ({ request }, use) => {
-    await use(new PromoCodeController(request));
-  },
-
-  createPromoCode: async ({ promoCodeController, adminToken }, use) => {
+  createPromoCode: async ({ apiClient, adminToken }, use) => {
     await use(async (courseId, overrides) => {
       const response = await base.step(
         "precondition: admin creates a promo code",
         () =>
-          promoCodeController.createPromoCode(
+          apiClient.promoCodes.createPromoCode(
             courseId,
             adminToken,
             buildPromoCodeData(overrides),
@@ -437,23 +372,11 @@ export const test = base.extend<Fixtures>({
     });
   },
 
-  learningPathController: async ({ api }, use) => {
-    await use(new LearningPathController(api));
-  },
-
-  rawLearningPathController: async ({ request }, use) => {
-    await use(new LearningPathController(request));
-  },
-
-  youtubeVideoController: async ({ api }, use) => {
-    await use(new YoutubeVideoController(api));
-  },
-
-  videoIdsToDelete: async ({ youtubeVideoController, adminToken }, use) => {
+  videoIdsToDelete: async ({ apiClient, adminToken }, use) => {
     const ids: string[] = [];
     await use(ids);
     await deleteEach(ids, (id) =>
-      youtubeVideoController.deleteVideo(id, adminToken),
+      apiClient.youtubeVideos.deleteVideo(id, adminToken),
     );
   },
 });

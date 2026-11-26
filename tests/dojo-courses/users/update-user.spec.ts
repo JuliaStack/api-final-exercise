@@ -15,17 +15,17 @@ test.describe("update user info", () => {
     test(
       `${id}: ${title} should be updated`,
       { tag: "@regression" },
-      async ({ userController, registeredUser, adminToken, userToken }) => {
+      async ({ apiClient, registeredUser, adminToken, userToken }) => {
         const userInfoResponse =
           await test.step("precondition: get user before update", () =>
-            userController.getUserInfo(userToken));
+            apiClient.users.getUserInfo(userToken));
         const userBeforeUpdate = await userInfoResponse.json();
 
         const payload = buildPayload();
 
         const updateResponse =
           await test.step(`admin updates ${title} of the user`, () =>
-            userController.updateUser(registeredUser.id, adminToken, payload));
+            apiClient.users.updateUser(registeredUser.id, adminToken, payload));
 
         const json = await updateResponse.json();
 
@@ -35,7 +35,7 @@ test.describe("update user info", () => {
 
         const updatedUser =
           await test.step(`get user with ${title} updated`, () =>
-            userController.getUserInfo(userToken));
+            apiClient.users.getUserInfo(userToken));
 
         const getJson = await updatedUser.json();
 
@@ -50,14 +50,14 @@ test.describe("update user info", () => {
     "API-032: user updated with isActive false should not be able to log in",
     { tag: "@regression" },
     async ({
-      userController,
-      rawUserController,
+      apiClient,
+      rawApiClient,
       registeredUser,
       adminToken,
     }) => {
       const updateResponse =
         await test.step("admin deactivates the user (isActive: false)", () =>
-          userController.updateUser(registeredUser.id, adminToken, {
+          apiClient.users.updateUser(registeredUser.id, adminToken, {
             isActive: false,
           }));
 
@@ -69,7 +69,7 @@ test.describe("update user info", () => {
 
       const tokenResponse =
         await test.step("deactivated user requests a token", () =>
-          rawUserController.getToken(buildTokenRequestData(registeredUser)));
+          rawApiClient.users.getToken(buildTokenRequestData(registeredUser)));
 
       await test.step("status code matches 401", () => {
         expect(tokenResponse.status()).toBe(401);
@@ -88,20 +88,20 @@ test.describe("update user info - negative scenarios", () => {
     "API-025: regular user updating a user - should return 403",
     { tag: "@regression" },
     async ({
-      userController,
-      rawUserController,
+      apiClient,
+      rawApiClient,
       registeredUser,
       userToken,
     }) => {
       const userInfoResponse =
         await test.step("precondition: get user before update", () =>
-          userController.getUserInfo(userToken));
+          apiClient.users.getUserInfo(userToken));
       const userBeforeUpdate = await userInfoResponse.json();
 
       const payload = { name: buildUserData().name };
 
       const response = await test.step("regular user updates own account", () =>
-        rawUserController.updateUser(registeredUser.id, userToken, payload));
+        rawApiClient.users.updateUser(registeredUser.id, userToken, payload));
 
       await test.step("status code matches 403", () => {
         expect(response.status()).toBe(403);
@@ -114,7 +114,7 @@ test.describe("update user info - negative scenarios", () => {
 
       const userAfterResponse =
         await test.step("get user after the request", () =>
-          userController.getUserInfo(userToken));
+          apiClient.users.getUserInfo(userToken));
 
       await test.step("user is not changed", async () => {
         expect(await userAfterResponse.json()).toEqual(userBeforeUpdate);
@@ -125,11 +125,11 @@ test.describe("update user info - negative scenarios", () => {
   test(
     "API-026: expired admin token - should return 401",
     { tag: "@regression" },
-    async ({ rawUserController, registeredUser }) => {
+    async ({ rawApiClient, registeredUser }) => {
       const payload = { name: buildUserData().name };
 
       const response = await test.step("update user with expired token", () =>
-        rawUserController.updateUser(registeredUser.id, expiredToken, payload));
+        rawApiClient.users.updateUser(registeredUser.id, expiredToken, payload));
 
       await test.step("status code matches 401", () => {
         expect(response.status()).toBe(401);
@@ -146,8 +146,8 @@ test.describe("update user info - negative scenarios", () => {
     "API-027: email of another account - should return 400",
     { tag: "@regression" },
     async ({
-      userController,
-      rawUserController,
+      apiClient,
+      rawApiClient,
       registeredUser,
       adminToken,
       userToken,
@@ -156,7 +156,7 @@ test.describe("update user info - negative scenarios", () => {
 
       const response =
         await test.step("admin sets email that belongs to another account", () =>
-          rawUserController.updateUser(registeredUser.id, adminToken, payload));
+          rawApiClient.users.updateUser(registeredUser.id, adminToken, payload));
 
       await test.step("status code matches 400", () => {
         expect(response.status()).toBe(400);
@@ -169,7 +169,7 @@ test.describe("update user info - negative scenarios", () => {
 
       const userAfterResponse =
         await test.step("get user after the request", () =>
-          userController.getUserInfo(userToken));
+          apiClient.users.getUserInfo(userToken));
 
       await test.step("user email is not changed", async () => {
         expect((await userAfterResponse.json()).email).toBe(
@@ -182,11 +182,11 @@ test.describe("update user info - negative scenarios", () => {
   test(
     "API-028: non-existing user - should return 400",
     { tag: "@regression" },
-    async ({ rawUserController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const payload = { name: buildUserData().name };
 
       const response = await test.step("admin updates non-existing user", () =>
-        rawUserController.updateUser(nonExistingUserId, adminToken, payload));
+        rawApiClient.users.updateUser(nonExistingUserId, adminToken, payload));
 
       await test.step("status code matches 400", () => {
         expect(response.status()).toBe(400);
@@ -209,12 +209,12 @@ test.describe("update user info - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawUserController, registeredUser, adminToken }) => {
+      async ({ rawApiClient, registeredUser, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin updates user with ${title}`, () =>
-            rawUserController.updateUser(
+            rawApiClient.users.updateUser(
               registeredUser.id,
               adminToken,
               payload,
@@ -235,12 +235,12 @@ test.describe("update user info - negative scenarios", () => {
   test(
     "API-031: role in the request body - should return 200 and keep role USER",
     { tag: "@regression" },
-    async ({ userController, registeredUser, adminToken, userToken }) => {
+    async ({ apiClient, registeredUser, adminToken, userToken }) => {
       const payload = { name: buildUserData().name, role: "ADMIN" };
 
       const response =
         await test.step("admin updates user with role ADMIN", () =>
-          userController.updateUser(registeredUser.id, adminToken, payload));
+          apiClient.users.updateUser(registeredUser.id, adminToken, payload));
 
       const json = await response.json();
       await test.step("response role is still USER", () => {
@@ -249,7 +249,7 @@ test.describe("update user info - negative scenarios", () => {
 
       const userAfterResponse =
         await test.step("get user after the request", () =>
-          userController.getUserInfo(userToken));
+          apiClient.users.getUserInfo(userToken));
 
       await test.step("user role is still USER", async () => {
         expect((await userAfterResponse.json()).role).toBe("USER");

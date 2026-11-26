@@ -11,17 +11,17 @@ test.describe("delete post", () => {
   test(
     "API-110: admin deleting a published post - should return 200 and remove it from the public list",
     { tag: ["@regression", "@smoke"] },
-    async ({ postController, adminToken }) => {
+    async ({ apiClient, adminToken }) => {
       const createResponse =
         await test.step("precondition: admin creates a published post", () =>
-          postController.createPost(
+          apiClient.posts.createPost(
             adminToken,
             buildPostData({ isPublished: true }),
           ));
       const post: CreatedPost = await createResponse.json();
 
       const response = await test.step("admin deletes the post", () =>
-        postController.deletePost(post.id, adminToken));
+        apiClient.posts.deletePost(post.id, adminToken));
 
       const json = await response.json();
 
@@ -31,7 +31,7 @@ test.describe("delete post", () => {
 
       const listResponse =
         await test.step("anonymous user requests the post list", () =>
-          postController.getPosts());
+          apiClient.posts.getPosts());
 
       const list: Post[] = await listResponse.json();
 
@@ -53,13 +53,13 @@ test.describe("delete post - negative scenarios", () => {
     test(
       `${id}: ${title} deleting a post - should return ${status}`,
       { tag: "@regression" },
-      async ({ postController, rawPostController, createPost, tokenFor }) => {
+      async ({ apiClient, rawApiClient, createPost, tokenFor }) => {
         const token = await tokenFor(caller);
 
         const post = await createPost({ isPublished: true });
 
         const response = await test.step(`${title} deletes the post`, () =>
-          rawPostController.deletePost(post.id, token));
+          rawApiClient.posts.deletePost(post.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -72,7 +72,7 @@ test.describe("delete post - negative scenarios", () => {
 
         const listResponse =
           await test.step("anonymous user requests the post list", () =>
-            postController.getPosts());
+            apiClient.posts.getPosts());
 
         const list: Post[] = await listResponse.json();
 
@@ -93,10 +93,10 @@ test.describe("delete post - negative scenarios", () => {
           "the route calls prisma.post.delete without a lookup and returns 500 for a missing id",
       },
     },
-    async ({ rawPostController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const response =
         await test.step("admin deletes a non-existing post", () =>
-          rawPostController.deletePost(nonExistingPostId, adminToken));
+          rawApiClient.posts.deletePost(nonExistingPostId, adminToken));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

@@ -10,11 +10,11 @@ test.describe("create course", () => {
   test(
     "API-042: admin creating a course with a valid title - should return 201 and a draft course",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController, courseIdsToDelete, adminToken }) => {
+    async ({ apiClient, courseIdsToDelete, adminToken }) => {
       const data = buildCourseData();
 
       const response = await test.step("admin creates a course", () =>
-        courseController.createCourse(adminToken, data));
+        apiClient.courses.createCourse(adminToken, data));
 
       const json = await response.json();
       courseIdsToDelete.push(json.id);
@@ -39,7 +39,7 @@ test.describe("create course", () => {
 
       const listResponse =
         await test.step("admin searches for the created course", () =>
-          courseController.getCourses({ search: data.title }, adminToken));
+          apiClient.courses.getCourses({ search: data.title }, adminToken));
 
       const list = await listResponse.json();
 
@@ -54,7 +54,7 @@ test.describe("create course", () => {
     "API-043: admin creating a course with an existing title - should return 201 with a different slug",
     { tag: "@regression" },
     async ({
-      courseController,
+      apiClient,
       createDraftCourse,
       courseIdsToDelete,
       adminToken,
@@ -63,7 +63,7 @@ test.describe("create course", () => {
 
       const response =
         await test.step("admin creates a course with the same title", () =>
-          courseController.createCourse(adminToken, {
+          apiClient.courses.createCourse(adminToken, {
             title: firstCourse.title,
           }));
 
@@ -85,7 +85,7 @@ test.describe("create course", () => {
 
       const listResponse =
         await test.step("admin searches for the courses by title", () =>
-          courseController.getCourses(
+          apiClient.courses.getCourses(
             { search: firstCourse.title },
             adminToken,
           ));
@@ -111,8 +111,8 @@ test.describe("create course - negative scenarios", () => {
       `${id}: ${title} creating a course - should return ${status}`,
       { tag: "@regression" },
       async ({
-        courseController,
-        rawCourseController,
+        apiClient,
+        rawApiClient,
         adminToken,
         tokenFor,
       }) => {
@@ -121,7 +121,7 @@ test.describe("create course - negative scenarios", () => {
         const data = buildCourseData();
 
         const response = await test.step(`${title} creates a course`, () =>
-          rawCourseController.createCourse(token, data));
+          rawApiClient.courses.createCourse(token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -134,7 +134,7 @@ test.describe("create course - negative scenarios", () => {
 
         const listResponse =
           await test.step("admin searches for the course by title", () =>
-            courseController.getCourses({ search: data.title }, adminToken));
+            apiClient.courses.getCourses({ search: data.title }, adminToken));
 
         const list = await listResponse.json();
 
@@ -149,12 +149,12 @@ test.describe("create course - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawCourseController, adminToken }) => {
+      async ({ rawApiClient, adminToken }) => {
         const payload = buildPayload();
 
         const response =
           await test.step(`admin creates a course with ${title}`, () =>
-            rawCourseController.createCourse(adminToken, payload));
+            rawApiClient.courses.createCourse(adminToken, payload));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);

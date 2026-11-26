@@ -14,7 +14,7 @@ test.describe("update course", () => {
   test(
     "API-054: admin updating all content fields of a course - should return 200 and the updated course",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController, draftCourse, createdCategory, adminToken }) => {
+    async ({ apiClient, draftCourse, createdCategory, adminToken }) => {
       const data = buildUpdateCourseData({
         categoryIds: [createdCategory.id],
       });
@@ -32,7 +32,7 @@ test.describe("update course", () => {
       };
 
       const response = await test.step("admin updates the course", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, data));
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, data));
 
       const json = await response.json();
 
@@ -47,7 +47,7 @@ test.describe("update course", () => {
 
       const detailsResponse =
         await test.step("admin requests the course by id", () =>
-          courseController.getCourse(draftCourse.id, adminToken));
+          apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const details: CourseDetail = await detailsResponse.json();
 
@@ -69,9 +69,9 @@ test.describe("update course", () => {
   test(
     "API-055: admin updating only the price - should leave the other fields unchanged",
     { tag: "@regression" },
-    async ({ courseController, draftCourse, createdCategory, adminToken }) => {
+    async ({ apiClient, draftCourse, createdCategory, adminToken }) => {
       await test.step("precondition: admin fills in all content fields of the course", () =>
-        courseController.updateCourse(
+        apiClient.courses.updateCourse(
           draftCourse.id,
           adminToken,
           buildUpdateCourseData({ categoryIds: [createdCategory.id] }),
@@ -79,18 +79,18 @@ test.describe("update course", () => {
 
       const beforeResponse =
         await test.step("precondition: admin requests the course by id", () =>
-          courseController.getCourse(draftCourse.id, adminToken));
+          apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const before: CourseDetail = await beforeResponse.json();
       // Outside the builder's price range (1-999), so it always differs from the earlier price.
       const price = 1000.99;
 
       await test.step("admin updates only the price", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, { price }));
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, { price }));
 
       const afterResponse =
         await test.step("admin requests the course by id", () =>
-          courseController.getCourse(draftCourse.id, adminToken));
+          apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const after: CourseDetail = await afterResponse.json();
 
@@ -107,22 +107,22 @@ test.describe("update course", () => {
   test(
     "API-056: admin sending categoryIds - should replace the categories of the course",
     { tag: "@regression" },
-    async ({ courseController, draftCourse, createCategory, adminToken }) => {
+    async ({ apiClient, draftCourse, createCategory, adminToken }) => {
       const firstCategory = await createCategory();
       const secondCategory = await createCategory();
 
       await test.step("precondition: admin assigns the course to the first category", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, {
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, {
           categoryIds: [firstCategory.id],
         }));
 
       await test.step("admin moves the course to the second category", () =>
-        courseController.updateCourse(draftCourse.id, adminToken, {
+        apiClient.courses.updateCourse(draftCourse.id, adminToken, {
           categoryIds: [secondCategory.id],
         }));
 
       const response = await test.step("admin requests the course by id", () =>
-        courseController.getCourse(draftCourse.id, adminToken));
+        apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const json: CourseDetail = await response.json();
 
@@ -138,7 +138,7 @@ test.describe("update course", () => {
     "API-057: admin renaming a course to the title of another course - should give it a unique slug",
     { tag: "@regression" },
     async ({
-      courseController,
+      apiClient,
       draftCourse,
       createDraftCourse,
       adminToken,
@@ -147,7 +147,7 @@ test.describe("update course", () => {
 
       const response =
         await test.step("admin renames the new course to the title of the existing course", () =>
-          courseController.updateCourse(renamedCourse.id, adminToken, {
+          apiClient.courses.updateCourse(renamedCourse.id, adminToken, {
             title: draftCourse.title,
           }));
 
@@ -160,7 +160,7 @@ test.describe("update course", () => {
 
       const detailsResponse =
         await test.step("admin requests the existing course by id", () =>
-          courseController.getCourse(draftCourse.id, adminToken));
+          apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const details: CourseDetail = await detailsResponse.json();
 
@@ -183,8 +183,8 @@ test.describe("update course - negative scenarios", () => {
       `${id}: ${title} updating a course - should return ${status}`,
       { tag: "@regression" },
       async ({
-        courseController,
-        rawCourseController,
+        apiClient,
+        rawApiClient,
         draftCourse,
         adminToken,
         tokenFor,
@@ -194,7 +194,7 @@ test.describe("update course - negative scenarios", () => {
         const data = buildUpdateCourseData();
 
         const response = await test.step(`${title} updates the course`, () =>
-          rawCourseController.updateCourse(draftCourse.id, token, data));
+          rawApiClient.courses.updateCourse(draftCourse.id, token, data));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -207,7 +207,7 @@ test.describe("update course - negative scenarios", () => {
 
         const detailsResponse =
           await test.step("admin requests the course by id", () =>
-            courseController.getCourse(draftCourse.id, adminToken));
+            apiClient.courses.getCourse(draftCourse.id, adminToken));
 
         const details: CourseDetail = await detailsResponse.json();
 
@@ -229,12 +229,12 @@ test.describe("update course - negative scenarios", () => {
           "the route calls prisma.course.update without a lookup and returns 500 for a missing id",
       },
     },
-    async ({ rawCourseController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const data = buildUpdateCourseData();
 
       const response =
         await test.step("admin updates a non-existing course", () =>
-          rawCourseController.updateCourse(
+          rawApiClient.courses.updateCourse(
             nonExistingCourseId,
             adminToken,
             data,

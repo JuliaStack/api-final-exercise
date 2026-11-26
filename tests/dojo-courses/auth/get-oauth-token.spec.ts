@@ -10,9 +10,9 @@ test.describe("get a token", () => {
   test(
     "API-009: registered user should receive token",
     { tag: ["@regression", "@smoke"] },
-    async ({ userController, registeredUser }) => {
+    async ({ apiClient, registeredUser }) => {
       const response = await test.step("request token", () =>
-        userController.getToken(buildTokenRequestData(registeredUser)));
+        apiClient.users.getToken(buildTokenRequestData(registeredUser)));
 
       const json = await response.json();
 
@@ -29,9 +29,9 @@ test.describe("get token - negative scenarios", () => {
     test(
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
-      async ({ rawUserController, registeredUser }) => {
+      async ({ rawApiClient, registeredUser }) => {
         const response = await test.step(`request token with ${title}`, () =>
-          rawUserController.getToken({
+          rawApiClient.users.getToken({
             ...buildTokenRequestData(registeredUser),
             ...overrides,
           }));
@@ -51,10 +51,10 @@ test.describe("get token - negative scenarios", () => {
   test(
     "API-017: non-existing user - should return 401",
     { tag: "@regression" },
-    async ({ rawUserController }) => {
+    async ({ rawApiClient }) => {
       const response =
         await test.step("request token for non-existing user", () =>
-          rawUserController.getToken(buildTokenRequestData(buildUserData())));
+          rawApiClient.users.getToken(buildTokenRequestData(buildUserData())));
 
       await test.step("status code matches 401", () => {
         expect(response.status()).toBe(401);

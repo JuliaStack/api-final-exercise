@@ -14,9 +14,9 @@ test.describe("publish course", () => {
   test(
     "API-061: admin publishing a complete draft course - should return 200 and make the course public",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController, publishableCourse, adminToken }) => {
+    async ({ apiClient, publishableCourse, adminToken }) => {
       const response = await test.step("admin publishes the course", () =>
-        courseController.publishCourse(publishableCourse.id, adminToken));
+        apiClient.courses.publishCourse(publishableCourse.id, adminToken));
 
       const json = await response.json();
 
@@ -32,7 +32,7 @@ test.describe("publish course", () => {
 
       const detailsResponse =
         await test.step("anonymous user requests the course by id", () =>
-          courseController.getCourse(publishableCourse.id));
+          apiClient.courses.getCourse(publishableCourse.id));
 
       const details: CourseDetail = await detailsResponse.json();
 
@@ -47,16 +47,16 @@ test.describe("publish course", () => {
     "API-062: admin publishing an already published course - should unpublish it and hide it from the storefront",
     { tag: "@regression" },
     async ({
-      courseController,
-      rawCourseController,
+      apiClient,
+      rawApiClient,
       publishableCourse,
       adminToken,
     }) => {
       await test.step("precondition: admin publishes the course", () =>
-        courseController.publishCourse(publishableCourse.id, adminToken));
+        apiClient.courses.publishCourse(publishableCourse.id, adminToken));
 
       const response = await test.step("admin calls publish again", () =>
-        courseController.publishCourse(publishableCourse.id, adminToken));
+        apiClient.courses.publishCourse(publishableCourse.id, adminToken));
 
       const json = await response.json();
 
@@ -67,7 +67,7 @@ test.describe("publish course", () => {
 
       const detailsResponse =
         await test.step("anonymous user requests the course by id", () =>
-          rawCourseController.getCourse(publishableCourse.id));
+          rawApiClient.courses.getCourse(publishableCourse.id));
 
       await test.step("status code matches 404", () => {
         expect(detailsResponse.status()).toBe(404);
@@ -93,8 +93,8 @@ test.describe("publish course - negative scenarios", () => {
       `${id}: ${title} - should return ${status}`,
       { tag: "@regression" },
       async ({
-        courseController,
-        rawCourseController,
+        apiClient,
+        rawApiClient,
         courseWithChapters,
         adminToken,
       }) => {
@@ -102,10 +102,10 @@ test.describe("publish course - negative scenarios", () => {
         const data = buildPayload();
 
         await test.step("precondition: admin fills in the content fields of the course", () =>
-          courseController.updateCourse(course.id, adminToken, data));
+          apiClient.courses.updateCourse(course.id, adminToken, data));
 
         const response = await test.step("admin publishes the course", () =>
-          rawCourseController.publishCourse(course.id, adminToken));
+          rawApiClient.courses.publishCourse(course.id, adminToken));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -118,7 +118,7 @@ test.describe("publish course - negative scenarios", () => {
 
         const detailsResponse =
           await test.step("admin requests the course by id", () =>
-            courseController.getCourse(course.id, adminToken));
+            apiClient.courses.getCourse(course.id, adminToken));
 
         const details: CourseDetail = await detailsResponse.json();
 
@@ -133,27 +133,27 @@ test.describe("publish course - negative scenarios", () => {
     "API-066: course without a published chapter - should return 400",
     { tag: "@regression" },
     async ({
-      courseController,
-      rawCourseController,
+      apiClient,
+      rawApiClient,
       draftCourse,
       adminToken,
     }) => {
       await test.step("precondition: admin fills in all content fields of the course", () =>
-        courseController.updateCourse(
+        apiClient.courses.updateCourse(
           draftCourse.id,
           adminToken,
           buildUpdateCourseData(),
         ));
 
       await test.step("precondition: admin adds a draft chapter to the course", () =>
-        courseController.createChapter(
+        apiClient.courses.createChapter(
           draftCourse.id,
           adminToken,
           buildChapterData(),
         ));
 
       const response = await test.step("admin publishes the course", () =>
-        rawCourseController.publishCourse(draftCourse.id, adminToken));
+        rawApiClient.courses.publishCourse(draftCourse.id, adminToken));
 
       await test.step("status code matches 400", () => {
         expect(response.status()).toBe(400);
@@ -166,7 +166,7 @@ test.describe("publish course - negative scenarios", () => {
 
       const detailsResponse =
         await test.step("admin requests the course by id", () =>
-          courseController.getCourse(draftCourse.id, adminToken));
+          apiClient.courses.getCourse(draftCourse.id, adminToken));
 
       const details: CourseDetail = await detailsResponse.json();
 
@@ -187,8 +187,8 @@ test.describe("publish course - negative scenarios", () => {
       `${id}: ${title} publishing a course - should return ${status}`,
       { tag: "@regression" },
       async ({
-        courseController,
-        rawCourseController,
+        apiClient,
+        rawApiClient,
         publishableCourse,
         adminToken,
         tokenFor,
@@ -196,7 +196,7 @@ test.describe("publish course - negative scenarios", () => {
         const token = await tokenFor(caller);
 
         const response = await test.step(`${title} publishes the course`, () =>
-          rawCourseController.publishCourse(publishableCourse.id, token));
+          rawApiClient.courses.publishCourse(publishableCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -209,7 +209,7 @@ test.describe("publish course - negative scenarios", () => {
 
         const detailsResponse =
           await test.step("admin requests the course by id", () =>
-            courseController.getCourse(publishableCourse.id, adminToken));
+            apiClient.courses.getCourse(publishableCourse.id, adminToken));
 
         const details: CourseDetail = await detailsResponse.json();
 
@@ -223,10 +223,10 @@ test.describe("publish course - negative scenarios", () => {
   test(
     "API-070: admin publishing a non-existing course - should return 404",
     { tag: "@regression" },
-    async ({ rawCourseController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const response =
         await test.step("admin publishes a non-existing course", () =>
-          rawCourseController.publishCourse(nonExistingCourseId, adminToken));
+          rawApiClient.courses.publishCourse(nonExistingCourseId, adminToken));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

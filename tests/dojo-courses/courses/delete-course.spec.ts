@@ -10,17 +10,17 @@ test.describe("delete course", () => {
   test(
     "API-071: admin deleting a draft course with a chapter - should return 200 and remove the course",
     { tag: ["@regression", "@smoke"] },
-    async ({ courseController, rawCourseController, adminToken }) => {
+    async ({ apiClient, rawApiClient, adminToken }) => {
       const createResponse =
         await test.step("precondition: admin creates a course", () =>
-          courseController.createCourse(adminToken, buildCourseData()));
+          apiClient.courses.createCourse(adminToken, buildCourseData()));
       const { id } = await createResponse.json();
 
       await test.step("precondition: admin adds a chapter to the course", () =>
-        courseController.createChapter(id, adminToken, buildChapterData()));
+        apiClient.courses.createChapter(id, adminToken, buildChapterData()));
 
       const response = await test.step("admin deletes the course", () =>
-        courseController.deleteCourse(id, adminToken));
+        apiClient.courses.deleteCourse(id, adminToken));
 
       const json = await response.json();
 
@@ -30,7 +30,7 @@ test.describe("delete course", () => {
 
       const detailsResponse =
         await test.step("admin requests the deleted course by id", () =>
-          rawCourseController.getCourse(id, adminToken));
+          rawApiClient.courses.getCourse(id, adminToken));
 
       await test.step("status code matches 404", () => {
         expect(detailsResponse.status()).toBe(404);
@@ -56,8 +56,8 @@ test.describe("delete course - negative scenarios", () => {
       `${id}: ${title} deleting a course - should return ${status}`,
       { tag: "@regression" },
       async ({
-        courseController,
-        rawCourseController,
+        apiClient,
+        rawApiClient,
         draftCourse,
         adminToken,
         tokenFor,
@@ -65,7 +65,7 @@ test.describe("delete course - negative scenarios", () => {
         const token = await tokenFor(caller);
 
         const response = await test.step(`${title} deletes the course`, () =>
-          rawCourseController.deleteCourse(draftCourse.id, token));
+          rawApiClient.courses.deleteCourse(draftCourse.id, token));
 
         await test.step(`status code matches ${status}`, () => {
           expect(response.status()).toBe(status);
@@ -78,7 +78,7 @@ test.describe("delete course - negative scenarios", () => {
 
         const detailsResponse =
           await test.step("admin requests the course by id", () =>
-            courseController.getCourse(draftCourse.id, adminToken));
+            apiClient.courses.getCourse(draftCourse.id, adminToken));
 
         const details = await detailsResponse.json();
 
@@ -99,10 +99,10 @@ test.describe("delete course - negative scenarios", () => {
           "the route calls prisma.course.delete without a lookup and returns 500 for a missing id",
       },
     },
-    async ({ rawCourseController, adminToken }) => {
+    async ({ rawApiClient, adminToken }) => {
       const response =
         await test.step("admin deletes a non-existing course", () =>
-          rawCourseController.deleteCourse(nonExistingCourseId, adminToken));
+          rawApiClient.courses.deleteCourse(nonExistingCourseId, adminToken));
 
       await test.step("status code matches 404", () => {
         expect(response.status()).toBe(404);

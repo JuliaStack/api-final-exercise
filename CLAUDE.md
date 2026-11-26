@@ -40,13 +40,14 @@ Layered; each layer only depends on the ones below it:
 - `app/types/` — request/entity types (e.g. `RegisterUserData`, `UpdateUserData`).
 - `app/test-data/` — data builders (`buildUserData`, `buildTokenRequestData`, faker-based) and arrays of negative cases (`invalid-*-data.ts`, each with an `id` like `API-002`, a `title`, input, and expected result).
 - `app/controllers/` — thin wrappers over `APIRequestContext` extending `BaseController`. They make the HTTP call and return the raw response; **no assertions**.
+- `app/api-client.ts` — `ApiClient`, the single entry point to the API: one field per controller (`users`, `courses`, `categories`, `purchases`, `tags`, `posts`, `promoCodes`, `learningPaths`, `youtubeVideos`), all on one request context. A new controller becomes a field here, not a new fixture.
 - `app/json-schemas/` — Zod schemas for response bodies; specs assert with `schema.safeParse(json)` and `expect(result.error?.issues ?? []).toEqual([])`.
-- `fixtures.ts` — the single `test`/`expect` export; specs must import from here, not `@playwright/test`. Fixture chain: `api` → `userController` → `registeredUser` → `userToken`; plus `adminToken`, and `tokenFor(caller)` for the access-control caller arrays (registers a user only for `"regularUser"`).
+- `fixtures.ts` — the single `test`/`expect` export; specs must import from here, not `@playwright/test`. Fixture chain: `api` → `apiClient` → `registeredUser` → `userToken`; plus `adminToken`, and `tokenFor(caller)` for the access-control caller arrays (registers a user only for `"regularUser"`).
 - `dojo-courses/<domain>/*.spec.ts` — the specs, grouped by domain: `auth/`, `users/`, `courses/` (`global-setup.ts` stays in the root of `dojo-courses/`).
 
-Key convention: two controllers exist on purpose.
-- `userController` uses the `api` context with `failOnStatusCode: true`, so it **throws on non-2xx**. Use it for Arrange steps and happy paths.
-- `rawUserController` uses Playwright's default `request`, which does not throw. Use it for the request under test in negative scenarios (4xx assertions).
+Key convention: two API clients exist on purpose.
+- `apiClient` uses the `api` context with `failOnStatusCode: true`, so it **throws on non-2xx**. Use it for Arrange steps and happy paths (`apiClient.courses.createCourse(...)`).
+- `rawApiClient` uses Playwright's default `request`, which does not throw. Use it for the request under test in negative scenarios (4xx assertions; `rawApiClient.courses.getCourse(...)`).
 
 Other conventions seen throughout the specs: test titles are prefixed with an id (`API-010: ...`); everything is wrapped in `test.step(...)`; tags are set on each test (`test(title, { tag: ... }, fn)`), not on describes: every test is `@regression`, and only the main happy path of a resource is also `@smoke`; negative scenarios are a `for` loop over a case array from `test-data/`; setup steps in specs are named `precondition: ...` (same as in the fixtures).
 
